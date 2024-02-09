@@ -1,0 +1,1 @@
+./goal network create -r ~/net1 -n private -t my_network_template.json
