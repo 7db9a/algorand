@@ -1,0 +1,5 @@
+// This is a simple Algorand smart contract in TEAL
+// It approves any transaction that is attempted
+
+#pragma version 2
+int 1
