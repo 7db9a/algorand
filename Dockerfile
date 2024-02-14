@@ -12,8 +12,8 @@ RUN apt-get update && \
 RUN python3 -m venv /algodenv
 ENV PATH="/algodenv/bin:$PATH"
 
-# Install Algorand Python SDK in the virtual environment
-RUN pip3 install py-algorand-sdk
+# Install Algorand Python SDK and PyTeal in the virtual environment
+RUN pip3 install py-algorand-sdk pyteal
 
 # Copy the network template and initialization script
 COPY my_network_template.json /algod/my_network_template.json
@@ -26,3 +26,4 @@ EXPOSE 8080 7833
 
 # Run the network initialization script
 CMD ["sh", "/algod/initialize-network.sh"]
+
