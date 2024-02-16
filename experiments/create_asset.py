@@ -3,8 +3,9 @@ from algosdk.v2client import algod
 from algosdk.future.transaction import AssetConfigTxn
 
 # Replace these values with your node's address and token
-algod_address = "http://localhost:4190"
-algod_token = "your_algod_token"
+algod_address = "http://localhost:8080"
+algod_token = "d028d859385441d3ab510c88fb37ad294b9fa1b5c725c9920b4e24846d58072a"
+
 
 # Initialize Algod client
 algod_client = algod.AlgodClient(algod_token, algod_address)
