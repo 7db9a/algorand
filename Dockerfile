@@ -16,11 +16,9 @@ ENV PATH="/algodenv/bin:$PATH"
 RUN pip3 install py-algorand-sdk pyteal
 
 # Copy the network template and initialization script
+COPY experiments/ /algod/experiments/
 COPY my_network_template.json /algod/my_network_template.json
 COPY initialize-network.sh /algod/initialize-network.sh
-COPY hello_world.teal /algod/hello_world.teal
-COPY create_asset.py /algod/create_asset.py
-COPY create_account.py /algod/create_account.py
 
 # Expose necessary ports
 EXPOSE 8080 7833
