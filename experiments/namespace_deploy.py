@@ -122,17 +122,32 @@ def delete_app(client, private_key, app_id):
     wait_for_confirmation(client, tx_id)
     print("Deleted app-id:", app_id)
 
-def read_global_state(client, app_id):
-    response = client.application_info(app_id)
-    state = {}
-    for item in response['params']['global-state']:
-        key = base64.b64decode(item['key']).decode('utf-8')
-        value = item['value']
-        if value['type'] == 1:  # byte string
-            state[key] = base64.b64decode(value['bytes']).decode('utf-8')
-        else:
-            state[key] = value['uint']
-    return state
+def format_state(state):
+    formatted = {}
+    for item in state:
+        key = item["key"]
+        value = item["value"]
+        formatted_key = base64.b64decode(key).decode("utf-8")
+        if value["type"] == 1:  # byte string
+            try:
+                # Try to decode as UTF-8 string
+                formatted_value = base64.b64decode(value["bytes"]).decode("utf-8")
+            except UnicodeDecodeError:
+                # If decode fails, keep as base64 encoded string
+                formatted_value = value["bytes"]
+        else:  # integer
+            formatted_value = value["uint"]
+        formatted[formatted_key] = formatted_value
+ 
+
+def read_global_state(client, addr, app_id):
+    results = client.account_info(addr)
+    apps_created = results.get("created-apps", [])
+    for app in apps_created:
+        if app["id"] == app_id:
+            return format_state(app["params"]["global-state"])
+    return {}
+
 
 def main():
     # Configuration and client initialization
