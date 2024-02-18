@@ -9,11 +9,11 @@ from namespace import approval_program, clear_state_program
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-with open('namespace_approval_program.teal', 'r') as f:
+with open('namespace_approval_program.teal.tok', 'rb') as f:
     approval_program = f.read()
 
 
-with open('namespace_clear_state_program.teal', 'r') as f:
+with open('namespace_clear_state_program.teal.tok', 'rb') as f:
     clear_program = f.read()
 
 def initialize_client(algod_token, algod_address):
@@ -40,8 +40,9 @@ def create_app(client, private_key, approval_program_address, clear_program_addr
         params = client.suggested_params()
 
         # Define the application schemas
-        global_schema = transaction.StateSchema(num_uints=0, num_byte_slices=2)
+        global_schema = transaction.StateSchema(num_uints=0, num_byte_slices=3)
         local_schema = transaction.StateSchema(num_uints=0, num_byte_slices=0)
+        
 
 
         # declare on_complete as NoOp
