@@ -33,13 +33,20 @@ Enter the algorand container.
 1. **List Accounts**:
    `goal account list -d /algod/data/net1/Primary`
 
-2. **Identify Sender Account**:
+2. **Get Account Mnemonic**:
+
+   `goal account export -a <account_address> -d /algod/data/net1/Primary`
+
+3. **Identify Sender Account**:
    Choose an account with a positive balance from the list.
 
-3. **Send Transaction**:
+4. **Send Transaction**:
    `goal clerk send -a 0 -f [SenderAccount] -t [ContractAddress] -d /algod/data/net1/Node`
    Replace `[SenderAccount]` with the sender account address and `[ContractAddress]` with the address of the compiled smart contract.
 
-4. **Check Transaction**:
+5. **Check Transaction**:
    `goal node status -d /algod/data/net1/Node`
    Compare the current round with the transaction round to ensure it's processed.
+
+6. **Compile Teal File**:
+   `goal clerk compile app_example.teal`
