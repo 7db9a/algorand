@@ -9,11 +9,11 @@ from namespace import approval_program, clear_state_program
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-with open('namespace_approval_program.teal', 'rb') as f:
+with open('namespace_approval_program.teal', 'r') as f:
     approval_program = f.read()
 
 
-with open('namespace_clear_state_program.teal', 'rb') as f:
+with open('namespace_clear_state_program.teal', 'r') as f:
     clear_program = f.read()
 
 def initialize_client(algod_token, algod_address):
@@ -137,8 +137,7 @@ def main():
     # Configuration and client initialization
     algod_address = "http://127.0.0.1:8080"
     algod_token = "d028d859385441d3ab510c88fb37ad294b9fa1b5c725c9920b4e24846d58072a"
-    creator_mnemonic = "cost piano sample enough south bar diet garden nasty mystery mesh sadness convince bacon best patch surround protect drum actress entire vacuum begin abandon hair"
-
+    creator_mnemonic = "print sudden rack engine shield ocean lazy often inspire predict fury sign main cruise surround again tissue cost magnet prefer laptop jar check absent donkey"
     client = initialize_client(algod_token, algod_address)
     creator_private_key = mnemonic.to_private_key(creator_mnemonic)
 
