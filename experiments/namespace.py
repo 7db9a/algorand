@@ -19,28 +19,26 @@ def approval_program():
         Return(Int(1))
     ])
 
-    # Handling different transaction types
     program = Cond(
         [Txn.application_id() == Int(0), on_initialization],
         [Txn.application_args[0] == Bytes("update"), on_update],
-        [Txn.on_completion() == OnComplete.DeleteApplication, Return(is_creator)]  # Allow deletion by the creator
+        [Txn.on_completion() == OnComplete.DeleteApplication, Return(is_creator)]
     )
 
-    return compileTeal(program, mode=Mode.Application, version=3)
+    return program
 
 def clear_state_program():
-    program = Seq([
+    return Seq([
         Return(Int(1))
     ])
 
-    return compileTeal(program, mode=Mode.Application, version=3)
-
 if __name__ == "__main__":
-    with open("namespace_approval.teal", "w") as f:
-        compiled = approval_program()
-        f.write(compiled)
+    # Compile the approval program
+    approval_teal = compileTeal(approval_program(), mode=Mode.Application, version=2)
+    with open("namespace_approval_program.teal", "w") as f:
+        f.write(approval_teal)
 
-    with open("namespace_clear_state.teal", "w") as f:
-        compiled = clear_state_program()
-        f.write(compiled)
-
+    # Compile the clear state program
+    clear_state_teal = compileTeal(clear_state_program(), mode=Mode.Application, version=2)
+    with open("namespace_clear_state_program.teal", "w") as f:
+        f.write(clear_state_teal)

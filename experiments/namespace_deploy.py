@@ -1,20 +1,25 @@
 import base64
-from algosdk import account, mnemonic, algod
-from algosdk.future.transaction import ApplicationCreateTxn, OnComplete, ApplicationUpdateTxn, ApplicationDeleteTxn
+import logging
+
+from algosdk import transaction
+from algosdk import account, mnemonic
+from algosdk.v2client import algod
 from pyteal import compileTeal, Mode
 from namespace import approval_program, clear_state_program
 
-# Declare constants for the algod connection and account mnemonics
-algod_address = "http://localhost:8080"
-algod_token = "d028d859385441d3ab510c88fb37ad294b9fa1b5c725c9920b4e24846d58072a"
-creator_mnemonic = "cost piano sample enough south bar diet garden nasty mystery mesh sadness convince bacon best patch surround protect drum actress entire vacuum begin abandon hair"
 
-def initialize_client():
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def initialize_client(algod_token, algod_address):
     return algod.AlgodClient(algod_token, algod_address)
 
 def compile_program(client, source_code):
-    compile_response = client.compile(source_code)
-    return base64.b64decode(compile_response["result"])
+    try:
+        compile_response = client.compile(source_code)
+        return base64.b64decode(compile_response["result"])
+    except Exception as e:
+        logging.error(f"Error compiling program: {e}")
+        raise
 
 def wait_for_confirmation(client, txid):
     last_round = client.status().get("last-round")
@@ -28,48 +33,52 @@ def wait_for_confirmation(client, txid):
     return txinfo
 
 def compile_teal_programs(client):
-    approval_teal = compileTeal(approval_program(), mode=Mode.Application, version=3)
-    clear_teal = compileTeal(clear_state_program(), mode=Mode.Application, version=3)
+    approval_teal = compileTeal(approval_program(), mode=Mode.Application, version=2)
+    clear_teal = compileTeal(clear_state_program(), mode=Mode.Application, version=2)
     return compile_program(client, approval_teal), compile_program(client, clear_teal)
 
-from algosdk.future.transaction import ApplicationCreateTxn, ApplicationUpdateTxn, ApplicationDeleteTxn, StateSchema
-
 def create_app(client, private_key, approval_program, clear_program, app_args):
-    # Define sender as creator
-    sender = account.address_from_private_key(private_key)
+    try:
+        # Define sender as creator
+        sender = account.address_from_private_key(private_key)
 
-    # Get node suggested parameters
-    params = client.suggested_params()
+        # Get node suggested parameters
+        params = client.suggested_params()
 
-    # Define the application schemas
-    global_schema = StateSchema(num_uints=0, num_byte_slices=2)
-    local_schema = StateSchema(num_uints=0, num_byte_slices=0)
+        # Define the application schemas
+        global_schema = transaction.StateSchema(num_uints=0, num_byte_slices=2)
+        local_schema = transaction.StateSchema(num_uints=0, num_byte_slices=0)
 
-    # Create unsigned transaction
-    txn = ApplicationCreateTxn(
-        sender,
-        params,
-        OnComplete.NoOpOC.real,
-        approval_program,
-        clear_program,
-        global_schema,
-        local_schema,
-        app_args
-    )
+        # Create unsigned transaction
+        txn = transaction.ApplicationCreateTxn(
+            sender,
+            params,
+            OnComplete.NoOpOC.real,
+            approval_program,
+            clear_program,
+            global_schema,
+            local_schema,
+            app_args
+        )
 
-    # Sign and send the transaction
-    signed_txn = txn.sign(private_key)
-    tx_id = signed_txn.transaction.get_txid()
-    client.send_transactions([signed_txn])
+        # Sign and send the transaction
+        signed_txn = txn.sign(private_key)
+        tx_id = signed_txn.transaction.get_txid()
+        client.send_transactions([signed_txn])
+        logging.info(f"Transaction sent, TxID: {tx_id}")
 
-    # Await confirmation
-    wait_for_confirmation(client, tx_id)
+        # Await confirmation
+        wait_for_confirmation(client, tx_id)
 
-    # Fetch and return the application ID
-    transaction_response = client.pending_transaction_info(tx_id)
-    app_id = transaction_response["application-index"]
-    print("Created new app-id:", app_id)
-    return app_id
+        # Fetch and return the application ID
+        transaction_response = client.pending_transaction_info(tx_id)
+        app_id = transaction_response["application-index"]
+        logging.info(f"Created new app-id: {app_id}")
+        return app_id
+
+    except Exception as e:
+        logging.error(f"Error creating app: {e}")
+        raise
 
 def update_app(client, private_key, app_id, approval_program, clear_program):
     # Define sender as creator
@@ -79,7 +88,7 @@ def update_app(client, private_key, app_id, approval_program, clear_program):
     params = client.suggested_params()
 
     # Create unsigned transaction
-    txn = ApplicationUpdateTxn(
+    txn = transaction.ApplicationUpdateTxn(
         sender,
         params,
         app_id,
@@ -104,7 +113,7 @@ def delete_app(client, private_key, app_id):
     params = client.suggested_params()
 
     # Create unsigned transaction
-    txn = ApplicationDeleteTxn(sender, params, app_id)
+    txn = transaction.ApplicationDeleteTxn(sender, params, app_id)
 
     # Sign and send the transaction
     signed_txn = txn.sign(private_key)
@@ -127,20 +136,35 @@ def read_global_state(client, app_id):
             state[key] = value['uint']
     return state
 
-
 def main():
-    client = initialize_client()
+    # Configuration and client initialization
+    algod_address = "http://127.0.0.1:8080"
+    algod_token = "d028d859385441d3ab510c88fb37ad294b9fa1b5c725c9920b4e24846d58072a"
+    creator_mnemonic = "cost piano sample enough south bar diet garden nasty mystery mesh sadness convince bacon best patch surround protect drum actress entire vacuum begin abandon hair"
+
+    client = initialize_client(algod_token, algod_address)
     creator_private_key = mnemonic.to_private_key(creator_mnemonic)
-    approval_program_compiled, clear_program_compiled = compile_teal_programs(client)
 
-    app_id = create_app(client, creator_private_key, approval_program_compiled, clear_program_compiled, [b"YourRepoName", b"https://github.com/YourRepoURL"])
+    # Load the pre-compiled programs
+    approval_program = load_compiled_program("approval_program.teal")
+    clear_state_program = load_compiled_program("clear_state_program.teal")
 
-    global_state = read_global_state(algod_client, app_id)
+    # Create the application
+    app_id = create_app(client, creator_private_key, approval_program_compiled, clear_state_program_compiled, [b"YourRepoName", b"https://github.com/YourRepoURL"])
+    print("Created new app-id:", app_id)
+
+    # Read the global state of the application
+    global_state = read_global_state(client, app_id)
     print("Global State:", global_state)
 
-    #update_app(client, creator_private_key, app_id, approval_program_compiled, clear_program_compiled)
+    # Optional: Update the application and read the state again
+    # update_app(client, creator_private_key, app_id, approval_program_compiled, clear_state_program_compiled)
+    # global_state = read_global_state(client, app_id)
+    # print("Updated Global State:", global_state)
 
+    # Delete the application
     delete_app(client, creator_private_key, app_id)
+    print("Application deleted.")
 
 if __name__ == "__main__":
     main()
