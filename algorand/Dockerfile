@@ -15,10 +15,10 @@ ENV PATH="/algodenv/bin:$PATH"
 # Install Algorand Python SDK and PyTeal in the virtual environment
 RUN pip3 install py-algorand-sdk pyteal
 
-# Copy the network template and initialization script
-COPY experiments/ /algod/experiments/
-COPY my_network_template.json /algod/my_network_template.json
-COPY initialize-network.sh /algod/initialize-network.sh
+# Copy the network template, initialization script, and experiment scripts
+COPY algorand/configs/my_network_template.json /algod/my_network_template.json
+COPY algorand/initialize-network.sh /algod/initialize-network.sh
+COPY algorand/experiments/ /algod/experiments/
 
 # Expose necessary ports
 EXPOSE 8080 7833

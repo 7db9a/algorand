@@ -1,0 +1,11 @@
+{
+    "Version": 33,
+    "GossipFanout": 1,
+    "NetAddress": "0.0.0.0:8080", // Changed for external access
+    "DNSBootstrapID": "",
+    "EnableProfiler": true,
+    "EnableRuntimeMetrics": true,
+    "MaxBlockHistoryLookback": 20000,
+    "EnableExperimentalAPI": true
+}
+

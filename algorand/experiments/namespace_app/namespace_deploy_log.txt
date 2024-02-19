@@ -1,0 +1,16 @@
+root@ab616eb05c9b:/algod# python experiments/namespace_deploy.py 
+2024-02-18 04:56:15,032 - INFO - Transaction sent, TxID: WF7VV4IUFMI6GBQ7P7DFHWTX5JZWOEK3OR4WNGKBPET5EV3XRI3A
+Waiting for confirmation...
+Transaction WF7VV4IUFMI6GBQ7P7DFHWTX5JZWOEK3OR4WNGKBPET5EV3XRI3A confirmed in round 57073.
+2024-02-18 04:56:19,037 - INFO - Created new app-id: 1223
+Created new app-id: 1223
+Traceback (most recent call last):
+  File "/algod/experiments/namespace_deploy.py", line 167, in <module>
+    main()
+  File "/algod/experiments/namespace_deploy.py", line 154, in main
+    global_state = read_global_state(client, app_id)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/algod/experiments/namespace_deploy.py", line 132, in read_global_state
+    state[key] = base64.b64decode(value['bytes']).decode('utf-8')
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
