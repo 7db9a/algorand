@@ -19,6 +19,7 @@ RUN pip3 install py-algorand-sdk pyteal
 COPY algorand/configs/my_network_template.json /algod/my_network_template.json
 COPY algorand/initialize-network.sh /algod/initialize-network.sh
 COPY algorand/experiments/ /algod/experiments/
+COPY algorand/examples/ /algod/examples/
 
 # Expose necessary ports
 EXPOSE 8080 7833
