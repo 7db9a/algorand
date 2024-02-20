@@ -6,15 +6,24 @@ from algosdk import transaction
 from algosdk import account, mnemonic
 from algosdk.v2client import algod
 from pyteal import compileTeal, Mode
-from vote import approval_program, clear_state_program
+
+with open('vote_approval.teal.tok', 'rb') as f:
+    approval_program = f.read()
+
+
+with open('vote_clear_state.teal.tok', 'rb') as f:
+    clear_program = f.read()
+
+# Debug: Print or inspect the contents of compiled_teal_bytes
+print("Compiled TEAL Bytecode:", clear_program)
 
 # user declared account mnemonics
-creator_mnemonic = "Your 25-word mnemonic goes here"
-user_mnemonic = "A second distinct 25-word mnemonic goes here"
+creator_mnemonic = "print sudden rack engine shield ocean lazy often inspire predict fury sign main cruise surround again tissue cost magnet prefer laptop jar check absent donkey"
+user_mnemonic = "print sudden rack engine shield ocean lazy often inspire predict fury sign main cruise surround again tissue cost magnet prefer laptop jar check absent donkey"
 
 # user declared algod connection parameters. Node must have EnableDeveloperAPI set to true in its config
-algod_address = "http://localhost:4001"
-algod_token = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+algod_address = "http://127.0.0.1:8080"
+algod_token = "d028d859385441d3ab510c88fb37ad294b9fa1b5c725c9920b4e24846d58072a"
 
 
 # helper function to compile program source
@@ -313,26 +322,6 @@ def main():
     global_schema = transaction.StateSchema(global_ints, global_bytes)
     local_schema = transaction.StateSchema(local_ints, local_bytes)
 
-    # get PyTeal approval program
-    approval_program_ast = approval_program()
-    # compile program to TEAL assembly
-    approval_program_teal = compileTeal(
-        approval_program_ast, mode=Mode.Application, version=2
-    )
-    # compile program to binary
-    approval_program_compiled = compile_program(algod_client, approval_program_teal)
-
-    # get PyTeal clear state program
-    clear_state_program_ast = clear_state_program()
-    # compile program to TEAL assembly
-    clear_state_program_teal = compileTeal(
-        clear_state_program_ast, mode=Mode.Application, version=2
-    )
-    # compile program to binary
-    clear_state_program_compiled = compile_program(
-        algod_client, clear_state_program_teal
-    )
-
     # configure registration and voting period
     status = algod_client.status()
     regBegin = status["last-round"] + 10
@@ -355,8 +344,8 @@ def main():
     app_id = create_app(
         algod_client,
         creator_private_key,
-        approval_program_compiled,
-        clear_state_program_compiled,
+        approval_program,
+        clear_program,
         global_schema,
         local_schema,
         app_args,
