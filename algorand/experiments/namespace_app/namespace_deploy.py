@@ -16,6 +16,9 @@ with open('namespace_approval_program.teal.tok', 'rb') as f:
 with open('namespace_clear_state_program.teal.tok', 'rb') as f:
     clear_program = f.read()
 
+# Debug: Print or inspect the contents of compiled_teal_bytes
+print("Compiled TEAL Bytecode:", clear_program)
+
 def initialize_client(algod_token, algod_address):
     return algod.AlgodClient(algod_token, algod_address)
 
@@ -30,7 +33,7 @@ def wait_for_confirmation(client, txid):
     print("Transaction {} confirmed in round {}.".format(txid, txinfo.get("confirmed-round")))
     return txinfo
 
-def create_app(client, private_key, approval_program_address, clear_program_address, app_args):
+def create_app(client, private_key, app_args):
  
     try:
         # Define sender as creator
@@ -79,7 +82,7 @@ def create_app(client, private_key, approval_program_address, clear_program_addr
         logging.error(f"Error creating app: {e}")
         raise
 
-def update_app(client, private_key, app_id, approval_program_address, clear_program_address):
+def update_app(client, private_key, app_id) :
     sender = account.address_from_private_key(private_key)
 
     # Get node suggested parameters
@@ -157,12 +160,8 @@ def main():
     client = initialize_client(algod_token, algod_address)
     creator_private_key = mnemonic.to_private_key(creator_mnemonic)
 
-    # Load the pre-compiled programs
-    approval_program_address = "N5ET6X4OG7JYLV27REU4XKXXQB4HGFQUCPP3PSRV56GD33GRRYMESETYWM"
-    clear_state_program_address = "ZYI7YTWEXF6FGMRDOJNAGIID5M7OKO554TJOVU2RCA7Z2QWQEBTGDOLOU4"
-
     # Create the application
-    app_id = create_app(client, creator_private_key, approval_program_address, clear_state_program_address, [b"YourRepoName", b"https://github.com/YourRepoURL"])
+    app_id = create_app(client, creator_private_key, [b"YourRepoName", b"https://github.com/YourRepoURL"])
     print("Created new app-id:", app_id)
 
     # Read the global state of the application
@@ -170,7 +169,7 @@ def main():
     print("Global State:", global_state)
 
     # Optional: Update the application and read the state again
-    # update_app(client, creator_private_key, app_id, approval_program_address, clear_state_program_address)
+    # update_app(client, creator_private_key, app_id)
     # global_state = read_global_state(client, app_id)
     # print("Updated Global State:", global_state)
 
