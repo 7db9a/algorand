@@ -221,6 +221,8 @@ def main():
     # Get the creator's address
     creator_address = account.address_from_private_key(private_key)
 
+    print("Creator address:", creator_address)
+
     # User 1 adds a repository
     add_repo(client, private_key, app_id, "User1Repo", "https://github.com/User1Repo")
 

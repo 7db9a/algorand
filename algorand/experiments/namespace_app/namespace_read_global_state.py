@@ -38,6 +38,7 @@ client = algod.AlgodClient(algod_token, algod_address)
 mnemonic_phrase = "twin pumpkin plastic stage fortune shallow melt betray ribbon receive claim enrich price exile absent avoid woman toilet print settle shiver inform rookie absorb unaware"
 private_key = mnemonic.to_private_key(mnemonic_phrase)
 sender_address = account.address_from_private_key(private_key)
+print("Sender address:", sender_address)
 
 # Replace with appropriate app ID
 app_id = 1121  # Replace with your application ID
