@@ -18,12 +18,11 @@ with open('vote_clear_state.teal.tok', 'rb') as f:
 print("Compiled TEAL Bytecode:", clear_program)
 
 # user declared account mnemonics
-creator_mnemonic = "print sudden rack engine shield ocean lazy often inspire predict fury sign main cruise surround again tissue cost magnet prefer laptop jar check absent donkey"
-user_mnemonic = "print sudden rack engine shield ocean lazy often inspire predict fury sign main cruise surround again tissue cost magnet prefer laptop jar check absent donkey"
+mnemonic_phrase = "twin pumpkin plastic stage fortune shallow melt betray ribbon receive claim enrich price exile absent avoid woman toilet print settle shiver inform rookie absorb unaware"
 
 # user declared algod connection parameters. Node must have EnableDeveloperAPI set to true in its config
 algod_address = "http://127.0.0.1:8080"
-algod_token = "d028d859385441d3ab510c88fb37ad294b9fa1b5c725c9920b4e24846d58072a"
+algod_token = "1fa5aed7ec723da8ec9abfb6396adbbb607dd95316f8277456ec7b65afeb3893"
 
 
 # helper function to compile program source
@@ -309,8 +308,8 @@ def main():
     algod_client = algod.AlgodClient(algod_token, algod_address)
 
     # define private keys
-    creator_private_key = get_private_key_from_mnemonic(creator_mnemonic)
-    user_private_key = get_private_key_from_mnemonic(user_mnemonic)
+    creator_private_key = get_private_key_from_mnemonic(mnemonic_phrase)
+    user_private_key = get_private_key_from_mnemonic(mnemonic_phrase)
 
     # declare application state storage (immutable)
     local_ints = 0
