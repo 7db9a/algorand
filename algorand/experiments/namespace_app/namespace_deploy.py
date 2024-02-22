@@ -5,7 +5,6 @@ from algosdk import transaction
 from algosdk import account, mnemonic
 from algosdk.v2client import algod
 from pyteal import compileTeal, Mode
-from namespace import approval_program, clear_state_program
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -106,24 +105,32 @@ def update_app(client, private_key, app_id) :
     wait_for_confirmation(client, tx_id)
     print("Updated app-id:", app_id)
 
-def delete_app(client, private_key, app_id):
-    # Define sender as creator
+def delete_app(client, private_key, index):
+    # declare sender
     sender = account.address_from_private_key(private_key)
 
-    # Get node suggested parameters
+    # get node suggested parameters
     params = client.suggested_params()
+    # comment out the next two (2) lines to use suggested fees
+    params.flat_fee = True
+    params.fee = 1000
 
-    # Create unsigned transaction
-    txn = transaction.ApplicationDeleteTxn(sender, params, app_id)
+    # create unsigned transaction
+    txn = transaction.ApplicationDeleteTxn(sender, params, index)
 
-    # Sign and send the transaction
+    # sign transaction
     signed_txn = txn.sign(private_key)
     tx_id = signed_txn.transaction.get_txid()
+
+    # send transaction
     client.send_transactions([signed_txn])
 
-    # Await confirmation
+    # await confirmation
     wait_for_confirmation(client, tx_id)
-    print("Deleted app-id:", app_id)
+
+    # display results
+    transaction_response = client.pending_transaction_info(tx_id)
+    print("Deleted app-id:", transaction_response["txn"]["txn"]["apid"])
 
 def format_state(state):
     formatted = {}
@@ -155,8 +162,8 @@ def read_global_state(client, addr, app_id):
 def main():
     # Configuration and client initialization
     algod_address = "http://127.0.0.1:8080"
-    algod_token = "d028d859385441d3ab510c88fb37ad294b9fa1b5c725c9920b4e24846d58072a"
-    creator_mnemonic = "print sudden rack engine shield ocean lazy often inspire predict fury sign main cruise surround again tissue cost magnet prefer laptop jar check absent donkey"
+    algod_token = "1fa5aed7ec723da8ec9abfb6396adbbb607dd95316f8277456ec7b65afeb3893"
+    creator_mnemonic = "twin pumpkin plastic stage fortune shallow melt betray ribbon receive claim enrich price exile absent avoid woman toilet print settle shiver inform rookie absorb unaware"
     client = initialize_client(algod_token, algod_address)
     creator_private_key = mnemonic.to_private_key(creator_mnemonic)
 
@@ -164,8 +171,11 @@ def main():
     app_id = create_app(client, creator_private_key, [b"YourRepoName", b"https://github.com/YourRepoURL"])
     print("Created new app-id:", app_id)
 
+    # Get the creator's address
+    creator_address = account.address_from_private_key(creator_private_key)
+
     # Read the global state of the application
-    global_state = read_global_state(client, app_id)
+    global_state = read_global_state(client, creator_address, app_id)
     print("Global State:", global_state)
 
     # Optional: Update the application and read the state again

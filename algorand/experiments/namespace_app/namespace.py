@@ -19,11 +19,15 @@ def approval_program():
         Return(Int(1))
     ])
 
+
     program = Cond(
         [Txn.application_id() == Int(0), on_initialization],
-        [Txn.application_args[0] == Bytes("update"), on_update],
-        [Txn.on_completion() == OnComplete.DeleteApplication, Return(is_creator)]
+        [Txn.on_completion() == OnComplete.DeleteApplication, Return(is_creator)],
+        [Txn.on_completion() == OnComplete.UpdateApplication, Return(is_creator)],  # Added for completeness
+        # Ensure ApplicationArgs access is below the transaction type checks
+        [Txn.application_args[0] == Bytes("update"), on_update]
     )
+
 
     return program
 
