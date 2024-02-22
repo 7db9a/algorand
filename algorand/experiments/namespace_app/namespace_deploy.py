@@ -220,8 +220,6 @@ def main():
 
     # Get the creator's address
     creator_address = account.address_from_private_key(private_key)
-    app_id = create_app(client, private_key)
-    print("Created new app-id:", app_id)
 
     # User 1 adds a repository
     add_repo(client, private_key, app_id, "User1Repo", "https://github.com/User1Repo")
