@@ -33,54 +33,51 @@ def wait_for_confirmation(client, txid):
     return txinfo
 
 def create_app(client, private_key, app_args):
+    # define sender as creator
+    sender = account.address_from_private_key(private_key)
+
+    # declare on_complete as NoOp
+    on_complete = transaction.OnComplete.NoOpOC.real
+
+    # Define the application schemas
+    global_schema = transaction.StateSchema(num_uints=0, num_byte_slices=3)
+    local_schema = transaction.StateSchema(num_uints=0, num_byte_slices=0)
+
+    # get node suggested parameters
+    params = client.suggested_params()
+    # comment out the next two (2) lines to use suggested fees
+    params.flat_fee = True
+    params.fee = 1000
+
+    # create unsigned transaction
+    txn = transaction.ApplicationCreateTxn(
+        sender,
+        params,
+        on_complete,
+        approval_program,
+        clear_program,
+        global_schema,
+        local_schema,
+        app_args,
+    )
+
+    # sign transaction
+    signed_txn = txn.sign(private_key)
+    tx_id = signed_txn.transaction.get_txid()
+
+    # send transaction
+    client.send_transactions([signed_txn])
+
+    # await confirmation
+    wait_for_confirmation(client, tx_id)
+
+    # display results
+    transaction_response = client.pending_transaction_info(tx_id)
+    app_id = transaction_response["application-index"]
+    print("Created new app-id:", app_id)
+
+    return app_id
  
-    try:
-        # Define sender as creator
-        sender = account.address_from_private_key(private_key)
-
-        # Get node suggested parameters
-        params = client.suggested_params()
-
-        # Define the application schemas
-        global_schema = transaction.StateSchema(num_uints=0, num_byte_slices=3)
-        local_schema = transaction.StateSchema(num_uints=0, num_byte_slices=0)
-        
-
-
-        # declare on_complete as NoOp
-        on_complete = transaction.OnComplete.NoOpOC.real
-
-        # Create unsigned transaction
-        txn = transaction.ApplicationCreateTxn(
-            sender,
-            params,
-            on_complete,
-            approval_program,
-            clear_program,
-            global_schema,
-            local_schema,
-            app_args
-        )
-
-        # Sign and send the transaction
-        signed_txn = txn.sign(private_key)
-        tx_id = signed_txn.transaction.get_txid()
-        client.send_transactions([signed_txn])
-        logging.info(f"Transaction sent, TxID: {tx_id}")
-
-        # Await confirmation
-        wait_for_confirmation(client, tx_id)
-
-        # Fetch and return the application ID
-        transaction_response = client.pending_transaction_info(tx_id)
-        app_id = transaction_response["application-index"]
-        logging.info(f"Created new app-id: {app_id}")
-        return app_id
-
-    except Exception as e:
-        logging.error(f"Error creating app: {e}")
-        raise
-
 def update_app(client, private_key, app_id) :
     sender = account.address_from_private_key(private_key)
 
@@ -148,6 +145,7 @@ def format_state(state):
         else:  # integer
             formatted_value = value["uint"]
         formatted[formatted_key] = formatted_value
+    return formatted
  
 
 def read_global_state(client, addr, app_id):
@@ -169,7 +167,6 @@ def main():
 
     # Create the application
     app_id = create_app(client, creator_private_key, [b"YourRepoName", b"https://github.com/YourRepoURL"])
-    print("Created new app-id:", app_id)
 
     # Get the creator's address
     creator_address = account.address_from_private_key(creator_private_key)
