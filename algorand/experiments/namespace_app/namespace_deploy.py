@@ -1,8 +1,7 @@
 import base64
 import logging
 
-from algosdk import transaction
-from algosdk import account, mnemonic
+from algosdk import transaction, account, mnemonic, encoding
 from algosdk.v2client import algod
 from pyteal import compileTeal, Mode
 
@@ -60,7 +59,7 @@ def create_app(client, private_key):
         params = client.suggested_params()
 
         # Define the application schemas
-        global_schema = transaction.StateSchema(num_uints=0, num_byte_slices=3)
+        global_schema = transaction.StateSchema(num_uints=0, num_byte_slices=4)
         local_schema = transaction.StateSchema(num_uints=0, num_byte_slices=0)
 
         # Create unsigned transaction
@@ -123,6 +122,37 @@ def add_repo(client, private_key, app_id, repo_name, repo_url):
         logging.error(f"Error adding repo: {e}")
         raise
 
+def add_contributor(client, private_key, app_id, contributor_name):
+    try:
+        # Define sender
+        sender = account.address_from_private_key(private_key)
+
+        # Get node suggested parameters
+        params = client.suggested_params()
+
+        # Create unsigned transaction
+        app_args = [b"add_contributor", bytes(contributor_name, "utf-8")]
+        txn = transaction.ApplicationCallTxn(
+            sender,
+            params,
+            app_id,
+            transaction.OnComplete.NoOpOC,
+            app_args=app_args
+        )
+
+        # Sign and send the transaction
+        signed_txn = txn.sign(private_key)
+        tx_id = signed_txn.transaction.get_txid()
+        client.send_transactions([signed_txn])
+
+        # Await confirmation
+        wait_for_confirmation(client, tx_id)
+        logging.info(f"Contributor {contributor_name} added to app-id: {app_id}")
+
+    except Exception as e:
+        logging.error(f"Error adding contributor: {e}")
+        raise
+
 def update_app(client, private_key, app_id) :
     sender = account.address_from_private_key(private_key)
 
@@ -182,19 +212,36 @@ def format_state(state):
     for item in state:
         key = item["key"]
         value = item["value"]
-        formatted_key = base64.b64decode(key).decode("utf-8")
-        if value["type"] == 1:  # byte string
+
+        # Decode the base64 key
+        decoded_key = base64.b64decode(key)
+
+        # Check if the key is an Algorand address (32 bytes length)
+        if len(decoded_key) == 32:
+            # Encode as Algorand address
+            formatted_key = encoding.encode_address(decoded_key)
+        else:
+            # Try to decode as UTF-8
             try:
-                # Try to decode as UTF-8 string
-                formatted_value = base64.b64decode(value["bytes"]).decode("utf-8")
+                formatted_key = decoded_key.decode("utf-8")
             except UnicodeDecodeError:
-                # If decode fails, keep as base64 encoded string
-                formatted_value = value["bytes"]
+                formatted_key = decoded_key  # Fallback to raw bytes if not a valid UTF-8 string
+
+        # Process value based on its type
+        if value["type"] == 1:  # byte string
+            # Decode the base64 value
+            decoded_value = base64.b64decode(value["bytes"])
+
+            # Try to decode the value as UTF-8, else keep it as base64 string
+            try:
+                formatted_value = decoded_value.decode("utf-8")
+            except UnicodeDecodeError:
+                formatted_value = base64.b64encode(decoded_value).decode("utf-8")
         else:  # integer
             formatted_value = value["uint"]
+
         formatted[formatted_key] = formatted_value
     return formatted
- 
 
 def read_global_state(client, addr, app_id):
     results = client.account_info(addr)
@@ -221,7 +268,11 @@ def main():
     # Get the creator's address
     creator_address = account.address_from_private_key(private_key)
 
-    print("Creator address:", creator_address)
+    # User 1 adds themselves as a contributor
+    add_contributor(client, private_key, app_id, "User1")
+
+    # User 2 adds themselves as a contributor (using the same private key)
+    add_contributor(client, private_key, app_id, "User2")
 
     # User 1 adds a repository
     add_repo(client, private_key, app_id, "User1Repo", "https://github.com/User1Repo")

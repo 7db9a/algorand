@@ -24,12 +24,28 @@ def approval_program():
         Return(Int(1))
     ])
 
+
+    on_add_contributor = Seq([
+        Assert(Txn.application_args.length() == Int(2)),  # Only need 2 arguments now
+        Assert(Txn.application_args[0] == Bytes("add_contributor")),
+        App.globalPut(Txn.sender(), Txn.application_args[1]),  # Key is Txn.sender() (ContributorID), Value is ContributorName
+        Return(Int(1))
+    ])
+
     on_delete_repo = Seq([
         Assert(Txn.application_args.length() == Int(2)),
         Assert(Txn.application_args[0] == Bytes("delete_repo")),
         App.globalDel(Txn.application_args[1]), # Key is RepoName
         Return(Int(1))
     ])
+
+    on_delete_contributor = Seq([
+        Assert(Txn.application_args.length() == Int(2)),
+        Assert(Txn.application_args[0] == Bytes("delete_contributor")),
+        App.globalDel(Txn.application_args[1]), # Key is ContributorID
+        Return(Int(1))
+    ])
+
 
 
     program = Cond(
@@ -39,6 +55,7 @@ def approval_program():
         # Ensure ApplicationArgs access is below the transaction type checks
         [Txn.application_args[0] == Bytes("update"), on_update],
         [Txn.application_args[0] == Bytes("add_repo"), on_add_repo],
+        [Txn.application_args[0] == Bytes("add_contributor"), on_add_contributor]
     )
 
 
