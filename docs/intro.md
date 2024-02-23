@@ -14,7 +14,11 @@ However, if you're run this via the docker-compose in `../`,
 
 and
 
-`docker-compose up algorand`
+`docker-compose up -d algorand`
+
+## Find your algod token instance
+
+   `cat /algod/data/net1/Primary/algod.token`
 
 ## Compiling "Hello World" Smart Contract
 
@@ -26,7 +30,9 @@ Enter the algorand container.
    int 1`
 
 2. **Compile TEAL Script**:
-   `goal clerk compile hello_world.teal -d /algod/data/net1/Node`
+   `goal clerk compile hello_world.teal -d /algod/data/net1/Primary`
+
+   Note you can choose to interact with `Primary` or `Node` instance algod.
 
 ## Deploying the Smart Contract
 
