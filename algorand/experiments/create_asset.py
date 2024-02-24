@@ -1,54 +1,60 @@
-from algosdk import account, mnemonic
+from algosdk import account, transaction, mnemonic
 from algosdk.v2client import algod
-from algosdk.future.transaction import AssetConfigTxn
 
-# Replace these values with your node's address and token
-algod_address = "http://localhost:8080"
-algod_token = "d028d859385441d3ab510c88fb37ad294b9fa1b5c725c9920b4e24846d58072a"
+def create_asa(algod_address, algod_token, creator_private_key, total_units, asset_name, unit_name, url=None, decimals=0):
+    creator_address = account.address_from_private_key(creator_private_key)
 
+    # Initialize the algod client
+    algod_client = algod.AlgodClient(algod_token, algod_address)
 
-# Initialize Algod client
-algod_client = algod.AlgodClient(algod_token, algod_address)
+    # Get network parameters for transactions
+    params = algod_client.suggested_params()
 
-# Recover accounts (replace with actual mnemonics)
-mnemonic1 = "alley permit pair cabin high width brown census thrive scan million time music submit matter bunker model color time someone eyebrow wait finger ability knife"
-creator_private_key = mnemonic.to_private_key(mnemonic1)
-creator_address = mnemonic.to_public_key(mnemonic1)
+    # Asset creation transaction
+    txn = transaction.AssetConfigTxn(
+        sender=creator_address,
+        sp=params,
+        total=total_units,
+        decimals=decimals,
+        default_frozen=creator_address,
+        unit_name=unit_name,
+        asset_name=asset_name,
+        manager=creator_address,
+        reserve=creator_address,
+        freeze=creator_address,
+        clawback=creator_address,
+        url=url
+    )
 
-# Define asset parameters
-params = algod_client.suggested_params()
-asset_name = "hello"
-unit_name = "HELLO"
-total_supply = 1000000
-decimals = 0
-default_frozen = False
-manager_address = creator_address
-reserve_address = creator_address
-freeze_address = creator_address
-clawback_address = creator_address
+    # Sign the transaction
+    signed_txn = txn.sign(creator_private_key)
 
-# Create the asset creation transaction
-txn = AssetConfigTxn(
-    sender=creator_address,
-    sp=params,
-    total=total_supply,
-    decimals=decimals,
-    default_frozen=default_frozen,
-    unit_name=unit_name,
-    asset_name=asset_name,
-    manager=manager_address,
-    reserve=reserve_address,
-    freeze=freeze_address,
-    clawback=clawback_address
-)
+    # Send the transaction
+    txid = algod_client.send_transaction(signed_txn)
 
-# Sign the transaction
-signed_txn = txn.sign(creator_private_key)
+    # Wait for confirmation
+    try:
+        confirmed_txn = transaction.wait_for_confirmation(algod_client, txid, 4)
+        print("Asset ID: {}".format(confirmed_txn["asset-index"]))
+        return confirmed_txn["asset-index"]
+    except Exception as e:
+        print(e)
+        return None
 
-# Send the transaction
-txid = algod_client.send_transaction(signed_txn)
-print("Transaction ID: {}".format(txid))
+# Example usage
+# Replace these with your actual details
+algod_address = "http://127.0.0.1:8080"
+algod_token = "1fa5aed7ec723da8ec9abfb6396adbbb607dd95316f8277456ec7b65afeb3893"
+mnemonic_phrase = "twin pumpkin plastic stage fortune shallow melt betray ribbon receive claim enrich price exile absent avoid woman toilet print settle shiver inform rookie absorb unaware"
+creator_private_key = mnemonic.to_private_key(mnemonic_phrase)
+total_units = 1000000
+asset_name = "TurboSrc"
+unit_name = "TSRC"
 
-# Wait for confirmation
-confirmed_txn = wait_for_confirmation(algod_client, txid, 4)
-print("Transaction information: {}".format(json.dumps(confirmed_txn, indent=4)))
+asset_id = create_asa(algod_address, algod_token, creator_private_key, total_units, asset_name, unit_name)
+
+if asset_id is not None:
+    print(f"Successfully created asset with ID: {asset_id}")
+else:
+    print("Failed to create asset")
+
