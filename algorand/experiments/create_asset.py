@@ -1,6 +1,7 @@
 from algosdk import account, transaction, mnemonic
 from algosdk.v2client import algod
 
+
 def create_asa(algod_address, algod_token, creator_private_key, total_units, asset_name, unit_name, url=None, decimals=0):
     creator_address = account.address_from_private_key(creator_private_key)
 
@@ -41,6 +42,17 @@ def create_asa(algod_address, algod_token, creator_private_key, total_units, ass
         print(e)
         return None
 
+# Function to query the ASA balance of an account
+def get_asa_balance(algod_address, algod_token, address, asset_id):
+    algod_client = algod.AlgodClient(algod_token, algod_address)
+    account_info = algod_client.account_info(address)
+    assets = account_info.get('assets', [])
+    for asset in assets:
+        if asset['asset-id'] == asset_id:
+            return asset['amount']
+    return 0
+
+
 # Example usage
 # Replace these with your actual details
 algod_address = "http://127.0.0.1:8080"
@@ -58,3 +70,11 @@ if asset_id is not None:
 else:
     print("Failed to create asset")
 
+if asset_id is not None:
+    print(f"Successfully created asset with ID: {asset_id}")
+    # Query and print the ASA balance of the creator
+    creator_address = account.address_from_private_key(creator_private_key)
+    balance = get_asa_balance(algod_address, algod_token, creator_address, asset_id)
+    print(f"Creator's balance of asset {asset_id}: {balance}")
+else:
+    print("Failed to create asset")
