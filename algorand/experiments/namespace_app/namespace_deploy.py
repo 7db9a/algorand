@@ -315,12 +315,12 @@ def main():
     # User 2 adds a repository (using the same private key)
     add_repo(client, private_key, app_id, "User2Repo", "https://github.com/User2Repo")
 
-    ## Try and execute the contract as a non-asa holder (should fail)
-    #mnemonic_phrase_non_asa_holder = "brain rough jazz defy absent ability jeans much hire retire metal tragic fury culture stem beach farm upset relief stove sound comic bunker able exist"
-    #private_key_non_asa_holder = mnemonic.to_private_key(mnemonic_phrase_non_asa_holder)
-    #non_asa_holder_address = account.address_from_private_key(private_key_non_asa_holder)
-    #add_contributor(client, private_key, app_id, "User3")
-    #add_repo(client, private_key_non_asa_holder, app_id, "User3Repo", "https://github.com/User3Repo")
+    # Try and execute the contract as a non-asa holder (should fail)
+    mnemonic_phrase_non_asa_holder = "brain rough jazz defy absent ability jeans much hire retire metal tragic fury culture stem beach farm upset relief stove sound comic bunker able exist"
+    private_key_non_asa_holder = mnemonic.to_private_key(mnemonic_phrase_non_asa_holder)
+    non_asa_holder_address = account.address_from_private_key(private_key_non_asa_holder)
+    add_contributor(client, private_key, app_id, "User3")
+    add_repo(client, private_key_non_asa_holder, app_id, "User3Repo", "https://github.com/User3Repo")
 
     # Read the global state of the application
     global_state = read_global_state(client, creator_address, app_id)
