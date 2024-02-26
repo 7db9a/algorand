@@ -4,6 +4,40 @@ from pyteal import *
 
 
 def approval_program():
+    # ... [previous code remains unchanged]
+
+    # Define the ASA ID that voters must own
+    required_asa_id = Int(123456)  # Replace 123456 with the actual ASA ID
+
+    # Checks if the sender has the required ASA
+    has_required_asa = AssetHolding.balance(Txn.sender(), required_asa_id)
+
+    on_vote = Seq(
+        [
+            Assert(
+                And(
+                    Global.round() >= App.globalGet(Bytes("VoteBegin")),
+                    Global.round() <= App.globalGet(Bytes("VoteEnd")),
+                    # Add ASA ownership check
+                    has_required_asa,
+                    has_required_asa.value() > Int(0),  # Assuming at least 1 ASA is needed to vote
+                )
+            ),
+            # ... [rest of the on_vote logic remains unchanged]
+        ]
+    )
+
+    # ... [rest of the program remains unchanged]
+
+    return program
+
+# ... [clear_state_program remains unchanged]
+
+# ... [main section remains unchanged]
+
+
+
+def approval_program():
     on_creation = Seq(
         [
             App.globalPut(Bytes("Creator"), Txn.sender()),
@@ -46,12 +80,23 @@ def approval_program():
 
     choice = Txn.application_args[1]
     choice_tally = App.globalGet(choice)
+
+
+    # Define the ASA ID that voters must own
+    required_asa_id = Int(13821382)
+
+    # Checks if the sender has the required ASA
+    has_required_asa = AssetHolding.balance(Txn.sender(), required_asa_id)
+
     on_vote = Seq(
         [
             Assert(
                 And(
                     Global.round() >= App.globalGet(Bytes("VoteBegin")),
                     Global.round() <= App.globalGet(Bytes("VoteEnd")),
+                    # Add ASA ownership check
+                    has_required_asa,
+                    has_required_asa.value() > Int(0),  # Assuming at least 1 ASA is needed to vote
                 )
             ),
             get_vote_of_sender,
