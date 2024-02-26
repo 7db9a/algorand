@@ -6,6 +6,7 @@ from pyteal import *
 def approval_program():
     on_creation = Seq(
         [
+            check_asa_holder(1),
             App.globalPut(Bytes("Creator"), Txn.sender()),
             Assert(Txn.application_args.length() == Int(4)),
             App.globalPut(Bytes("RegBegin"), Btoi(Txn.application_args[0])),
@@ -95,6 +96,17 @@ def clear_state_program():
 
     return program
 
+def check_asa_holder(min_balance: int = 1):
+    # Hardcoding the asset ID (1653)
+    asset_id = Int(1653)
+
+    # The first argument should be the account address (Txn.sender()), and the second should be the asset ID (asset_id)
+    balance = AssetHolding.balance(Txn.sender(), asset_id)
+    return Seq([
+        balance,  # Load the asset balance
+        Assert(balance.hasValue()),  # Ensure the user holds the asset
+        Assert(balance.value() >= Int(min_balance))  # Check if the balance is sufficient
+    ])
 
 if __name__ == "__main__":
     with open("vote_approval.teal", "w") as f:

@@ -4,6 +4,7 @@ import base64
 
 from algosdk import transaction
 from algosdk import account, mnemonic
+from algosdk.transaction import AssetTransferTxn
 from algosdk.v2client import algod
 from pyteal import compileTeal, Mode
 
@@ -62,8 +63,6 @@ def wait_for_round(client, round):
         client.status_after_block(last_round)
         print(f"Round {last_round}")
 
-
-# create new application
 def create_app(
     client,
     private_key,
@@ -73,19 +72,22 @@ def create_app(
     local_schema,
     app_args,
 ):
-    # define sender as creator
+    # Define sender as creator
     sender = account.address_from_private_key(private_key)
 
-    # declare on_complete as NoOp
+    # Declare on_complete as NoOp
     on_complete = transaction.OnComplete.NoOpOC.real
 
-    # get node suggested parameters
+    # Get node suggested parameters
     params = client.suggested_params()
-    # comment out the next two (2) lines to use suggested fees
+    # Comment out the next two (2) lines to use suggested fees
     params.flat_fee = True
     params.fee = 1000
 
-    # create unsigned transaction
+    # Include Asset 1653 in the foreign assets for the transaction
+    foreign_assets = [1653]  # Asset ID to be included
+
+    # Create unsigned transaction
     txn = transaction.ApplicationCreateTxn(
         sender,
         params,
@@ -95,25 +97,25 @@ def create_app(
         global_schema,
         local_schema,
         app_args,
+        foreign_assets=foreign_assets  # Add this line
     )
 
-    # sign transaction
+    # Sign transaction
     signed_txn = txn.sign(private_key)
     tx_id = signed_txn.transaction.get_txid()
 
-    # send transaction
+    # Send transaction
     client.send_transactions([signed_txn])
 
-    # await confirmation
+    # Await confirmation
     wait_for_confirmation(client, tx_id)
 
-    # display results
+    # Display results
     transaction_response = client.pending_transaction_info(tx_id)
     app_id = transaction_response["application-index"]
     print("Created new app-id:", app_id)
 
     return app_id
-
 
 # opt-in to application
 def opt_in_app(client, private_key, index):
@@ -144,21 +146,27 @@ def opt_in_app(client, private_key, index):
     transaction_response = client.pending_transaction_info(tx_id)
     print("OptIn to app-id:", transaction_response["txn"]["txn"]["apid"])
 
-
-# call application
-def call_app(client, private_key, index, app_args):
+# Modify the call_app function to include foreign_assets
+def call_app(client, private_key, app_id, app_args):
     # declare sender
     sender = account.address_from_private_key(private_key)
     print("Call from account:", sender)
 
     # get node suggested parameters
     params = client.suggested_params()
-    # comment out the next two (2) lines to use suggested fees
-    params.flat_fee = True
-    params.fee = 1000
+
+    # Include Asset 1653 in the foreign assets for the transaction
+    foreign_assets = [1653]  # Asset ID to be included
 
     # create unsigned transaction
-    txn = transaction.ApplicationNoOpTxn(sender, params, index, app_args)
+    txn = transaction.ApplicationCallTxn(
+        sender,
+        params,
+        app_id,
+        transaction.OnComplete.NoOpOC,  # Specify the type of application call
+        app_args=app_args,
+        foreign_assets=foreign_assets  # Add this line
+    )
 
     # sign transaction
     signed_txn = txn.sign(private_key)
@@ -169,7 +177,6 @@ def call_app(client, private_key, index, app_args):
 
     # await confirmation
     wait_for_confirmation(client, tx_id)
-
 
 def format_state(state):
     formatted = {}
@@ -189,6 +196,40 @@ def format_state(state):
             formatted[formatted_key] = value["uint"]
     return formatted
 
+# Function to opt-in to an ASA (commented out by default)
+def optin_to_asa(client, private_key, asset_id):
+    """
+    Opt-in to an ASA for the account associated with the provided private key.
+
+    Args:
+        client (AlgodClient): An instance of the Algod client.
+        private_key (str): The private key of the account opting in.
+        asset_id (int): The ID of the ASA to opt-in.
+    """
+    # Define sender
+    sender = account.address_from_private_key(private_key)
+
+    # Get node suggested parameters
+    params = client.suggested_params()
+
+    # Create the asset opt-in transaction
+    optin_txn = AssetTransferTxn(
+        sender=sender,
+        sp=params,
+        receiver=sender,
+        amt=0,
+        index=asset_id
+    )
+
+    # Sign the transaction
+    signed_optin_txn = optin_txn.sign(private_key)
+
+    # Send the transaction
+    txid = client.send_transaction(signed_optin_txn)
+
+    # Await confirmation
+    wait_for_confirmation(client, txid)
+    print(f"Opted-in to asset {asset_id}.")
 
 # read user local state
 def read_local_state(client, addr, app_id):
@@ -310,6 +351,20 @@ def main():
     # define private keys
     creator_private_key = get_private_key_from_mnemonic(mnemonic_phrase)
     user_private_key = get_private_key_from_mnemonic(mnemonic_phrase)
+
+    # Derive the account address from the private key
+    account_address = account.address_from_private_key(creator_private_key)
+
+    # Assert that the account address is the expected one
+    expected_address = "VAX6M7SZY65NXSMAFRNUYHDAZK3326IUPZFKO63QZAAMIPVAK7ECTS2F4M"
+    assert account_address == expected_address, f"Unexpected account address: {account_address}"
+    print('asset address, success')
+
+
+    # Example usage of the optin_to_asa function (commented out)
+    # Uncomment the lines below to perform ASA opt-in
+    asset_id = 1653  # Replace with the actual asset ID
+    optin_to_asa(algod_client, creator_private_key, asset_id)
 
     # declare application state storage (immutable)
     local_ints = 0
