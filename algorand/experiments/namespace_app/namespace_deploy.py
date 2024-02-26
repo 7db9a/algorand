@@ -2,6 +2,7 @@ import base64
 import logging
 
 from algosdk import transaction, account, mnemonic, encoding
+from algosdk.transaction import AssetTransferTxn
 from algosdk.v2client import algod
 from pyteal import compileTeal, Mode
 
@@ -91,37 +92,6 @@ def create_app(client, private_key):
         logging.error(f"Error creating app: {e}")
         raise
 
-def add_repo(client, private_key, app_id, repo_name, repo_url):
-    try:
-        # Define sender
-        sender = account.address_from_private_key(private_key)
-
-        # Get node suggested parameters
-        params = client.suggested_params()
-
-        # Create unsigned transaction
-        app_args = [b"add_repo", bytes(repo_name, "utf-8"), bytes(repo_url, "utf-8")]
-        txn = transaction.ApplicationCallTxn(
-            sender,
-            params,
-            app_id,
-            transaction.OnComplete.NoOpOC,
-            app_args=app_args
-        )
-
-        # Sign and send the transaction
-        signed_txn = txn.sign(private_key)
-        tx_id = signed_txn.transaction.get_txid()
-        client.send_transactions([signed_txn])
-
-        # Await confirmation
-        wait_for_confirmation(client, tx_id)
-        logging.info(f"Repo {repo_name} added to app-id: {app_id}")
-
-    except Exception as e:
-        logging.error(f"Error adding repo: {e}")
-        raise
-
 def add_contributor(client, private_key, app_id, contributor_name):
     try:
         # Define sender
@@ -130,6 +100,9 @@ def add_contributor(client, private_key, app_id, contributor_name):
         # Get node suggested parameters
         params = client.suggested_params()
 
+        # Include Asset 1653 in the foreign assets for the transaction
+        foreign_assets = [1653]  # Asset ID to be included
+
         # Create unsigned transaction
         app_args = [b"add_contributor", bytes(contributor_name, "utf-8")]
         txn = transaction.ApplicationCallTxn(
@@ -137,7 +110,8 @@ def add_contributor(client, private_key, app_id, contributor_name):
             params,
             app_id,
             transaction.OnComplete.NoOpOC,
-            app_args=app_args
+            app_args=app_args,
+            foreign_assets=foreign_assets  # Add this line
         )
 
         # Sign and send the transaction
@@ -151,6 +125,41 @@ def add_contributor(client, private_key, app_id, contributor_name):
 
     except Exception as e:
         logging.error(f"Error adding contributor: {e}")
+        raise
+
+def add_repo(client, private_key, app_id, repo_name, repo_url):
+    try:
+        # Define sender
+        sender = account.address_from_private_key(private_key)
+
+        # Get node suggested parameters
+        params = client.suggested_params()
+
+        # Include Asset 1653 in the foreign assets for the transaction
+        foreign_assets = [1653]  # Asset ID to be included
+
+        # Create unsigned transaction
+        app_args = [b"add_repo", bytes(repo_name, "utf-8"), bytes(repo_url, "utf-8")]
+        txn = transaction.ApplicationCallTxn(
+            sender,
+            params,
+            app_id,
+            transaction.OnComplete.NoOpOC,
+            app_args=app_args,
+            foreign_assets=foreign_assets  # Add this line
+        )
+
+        # Sign and send the transaction
+        signed_txn = txn.sign(private_key)
+        tx_id = signed_txn.transaction.get_txid()
+        client.send_transactions([signed_txn])
+
+        # Await confirmation
+        wait_for_confirmation(client, tx_id)
+        logging.info(f"Repo {repo_name} added to app-id: {app_id}")
+
+    except Exception as e:
+        logging.error(f"Error adding repo: {e}")
         raise
 
 def update_app(client, private_key, app_id) :
@@ -269,6 +278,31 @@ def main():
     # Get the creator's address
     creator_address = account.address_from_private_key(private_key)
 
+    # Derive the account address from the private key
+    account_address = account.address_from_private_key(private_key)
+
+    # Assert that the account address is the expected one
+    expected_address = "VAX6M7SZY65NXSMAFRNUYHDAZK3326IUPZFKO63QZAAMIPVAK7ECTS2F4M"
+    assert creator_address == expected_address, f"Unexpected account address: {account_address}"
+    print('asset address, success')
+
+    ## optin to asa - only needs to be done once in ownership lifecycle.
+    #asset_id = 1653  # Replace with the actual asset ID
+    ## Create the asset opt-in transaction
+    #params = client.suggested_params()
+    #optin_txn = AssetTransferTxn(
+    #    sender=creator_address,
+    #    sp=params,
+    #    receiver=creator_address,
+    #    amt=0,
+    #    index=asset_id
+    #)
+    ## Sign the transaction
+    #signed_optin_txn = optin_txn.sign(private_key)
+    ## Send the transaction
+    #txid = client.send_transaction(signed_optin_txn)
+    #wait_for_confirmation(client, txid)
+
     # User 1 adds themselves as a contributor
     add_contributor(client, private_key, app_id, "User1")
 
@@ -281,12 +315,12 @@ def main():
     # User 2 adds a repository (using the same private key)
     add_repo(client, private_key, app_id, "User2Repo", "https://github.com/User2Repo")
 
-    # Try and execute the contract as a non-asa holder (should fail)
-    mnemonic_phrase_non_asa_holder = "brain rough jazz defy absent ability jeans much hire retire metal tragic fury culture stem beach farm upset relief stove sound comic bunker able exist"
-    private_key_non_asa_holder = mnemonic.to_private_key(mnemonic_phrase_non_asa_holder)
-    non_asa_holder_address = account.address_from_private_key(private_key_non_asa_holder)
-    add_contributor(client, private_key, app_id, "User3")
-    add_repo(client, private_key_non_asa_holder, app_id, "User3Repo", "https://github.com/User3Repo")
+    ## Try and execute the contract as a non-asa holder (should fail)
+    #mnemonic_phrase_non_asa_holder = "brain rough jazz defy absent ability jeans much hire retire metal tragic fury culture stem beach farm upset relief stove sound comic bunker able exist"
+    #private_key_non_asa_holder = mnemonic.to_private_key(mnemonic_phrase_non_asa_holder)
+    #non_asa_holder_address = account.address_from_private_key(private_key_non_asa_holder)
+    #add_contributor(client, private_key, app_id, "User3")
+    #add_repo(client, private_key_non_asa_holder, app_id, "User3Repo", "https://github.com/User3Repo")
 
     # Read the global state of the application
     global_state = read_global_state(client, creator_address, app_id)
