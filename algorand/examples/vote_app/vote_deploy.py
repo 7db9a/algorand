@@ -18,6 +18,8 @@ with open('vote_clear_state.teal.tok', 'rb') as f:
 # Debug: Print or inspect the contents of compiled_teal_bytes
 print("Compiled TEAL Bytecode:", clear_program)
 
+TOTAL_SUPPLY = 1000000  # 1 million
+
 # user declared account mnemonics
 mnemonic_phrase = "twin pumpkin plastic stage fortune shallow melt betray ribbon receive claim enrich price exile absent avoid woman toilet print settle shiver inform rookie absorb unaware"
 
@@ -70,7 +72,7 @@ def create_app(
     clear_program,
     global_schema,
     local_schema,
-    app_args,
+    app_args=None,
 ):
     # Define sender as creator
     sender = account.address_from_private_key(private_key)
@@ -87,6 +89,10 @@ def create_app(
     # Include Asset 1653 in the foreign assets for the transaction
     foreign_assets = [1653]  # Asset ID to be included
 
+    if app_args is None:
+        app_args = []
+    app_args.append(intToBytes(TOTAL_SUPPLY))  # Append TotalSupply to app_args
+
     # Create unsigned transaction
     txn = transaction.ApplicationCreateTxn(
         sender,
@@ -97,7 +103,7 @@ def create_app(
         global_schema,
         local_schema,
         app_args,
-        foreign_assets=foreign_assets  # Add this line
+        foreign_assets=foreign_assets
     )
 
     # Sign transaction
@@ -341,8 +347,7 @@ def clear_app(client, private_key, index):
 
 # convert 64 bit integer i to byte string
 def intToBytes(i):
-    return i.to_bytes(8, "big")
-
+    return i.to_bytes(8, 'big')  # Convert integer to 8-byte big-endian
 
 def main():
     # initialize an algodClient

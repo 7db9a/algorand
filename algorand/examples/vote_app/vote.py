@@ -8,11 +8,12 @@ def approval_program():
         [
             check_asa_holder(1),
             App.globalPut(Bytes("Creator"), Txn.sender()),
-            Assert(Txn.application_args.length() == Int(4)),
+            Assert(Txn.application_args.length() == Int(5)),  # Changed from 4 to 5 to account for TotalSupply argument
             App.globalPut(Bytes("RegBegin"), Btoi(Txn.application_args[0])),
             App.globalPut(Bytes("RegEnd"), Btoi(Txn.application_args[1])),
             App.globalPut(Bytes("VoteBegin"), Btoi(Txn.application_args[2])),
             App.globalPut(Bytes("VoteEnd"), Btoi(Txn.application_args[3])),
+            App.globalPut(Bytes("TotalSupply"), Btoi(Txn.application_args[4])),  # Save TotalSupply in the global state
             Return(Int(1)),
         ]
     )
