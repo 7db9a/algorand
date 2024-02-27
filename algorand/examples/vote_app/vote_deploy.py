@@ -446,6 +446,7 @@ def main():
     )
     print("Global state:", global_state)
 
+    # Find the choice with the maximum votes
     max_votes = 0
     max_votes_choice = None
     for key, value in global_state.items():
@@ -455,12 +456,13 @@ def main():
             "VoteBegin",
             "VoteEnd",
             "Creator",
+            "TotalSupply"  # Exclude TotalSupply from the winner calculation
         ) and isinstance(value, int):
             if value > max_votes:
                 max_votes = value
                 max_votes_choice = key
 
-    print("The winner is:", max_votes_choice)
+    print("The winner is:", max_votes_choice if max_votes_choice is not None else "No votes cast")
 
     # delete application
     delete_app(algod_client, creator_private_key, app_id)
