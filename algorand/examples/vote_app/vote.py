@@ -48,21 +48,29 @@ def approval_program():
 
     choice = Txn.application_args[1]
     choice_tally = App.globalGet(choice)
-    on_vote = Seq(
-        [
-            Assert(
-                And(
-                    Global.round() >= App.globalGet(Bytes("VoteBegin")),
-                    Global.round() <= App.globalGet(Bytes("VoteEnd")),
-                )
-            ),
-            get_vote_of_sender,
-            If(get_vote_of_sender.hasValue(), Return(Int(0))),
-            App.globalPut(choice, choice_tally + Int(1)),
-            App.localPut(Int(0), Bytes("voted"), choice),
-            Return(Int(1)),
-        ]
-    )
+
+    # Define your asset ID
+    asset_id = Int(1653)  # Replace with your actual ASA ID
+
+    # Declare a scratch variable to store the ASA balance
+    #balance_var = ScratchVar(TealType.uint64)
+    balance = get_asa_balance_expr(asset_id)
+
+    # Modified on_vote section
+    on_vote = Seq([
+        Assert(
+            And(
+                Global.round() >= App.globalGet(Bytes("VoteBegin")),
+                Global.round() <= App.globalGet(Bytes("VoteEnd")),
+            )
+        ),
+        get_vote_of_sender,
+        balance,
+        If(get_vote_of_sender.hasValue(), Return(Int(0))),
+        If(balance.hasValue(), App.globalPut(choice, choice_tally + balance.value())),
+        App.localPut(Int(0), Bytes("voted"), choice),
+        Return(Int(1)),
+    ])
 
     program = Cond(
         [Txn.application_id() == Int(0), on_creation],
@@ -96,6 +104,11 @@ def clear_state_program():
     )
 
     return program
+
+# New function to get ASA balance as an expression
+def get_asa_balance_expr(asset_id):
+    balance = AssetHolding.balance(Txn.sender(), asset_id)
+    return balance
 
 def check_asa_holder(min_balance: int = 1):
     # Hardcoding the asset ID (1653)
