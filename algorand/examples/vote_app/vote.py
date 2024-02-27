@@ -58,6 +58,7 @@ def approval_program():
 
     # Modified on_vote section
     on_vote = Seq([
+        check_asa_holder(1),
         Assert(
             And(
                 Global.round() >= App.globalGet(Bytes("VoteBegin")),
