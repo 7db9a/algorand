@@ -383,7 +383,7 @@ def main():
 
     # declare application state storage (immutable)
     local_ints = 0
-    local_bytes = 1
+    local_bytes = 0
     global_ints = (
         24  # 4 for setup + 20 for choices. Use a larger number for more choices.
     )
@@ -440,12 +440,12 @@ def main():
     call_app(algod_client, user_private_key, app_id, [b"vote", b"choiceA"])
 
     # read local state of application from user account
-    print(
-        "Local state:",
-        read_local_state(
-            algod_client, account.address_from_private_key(user_private_key), app_id
-        ),
-    )
+    #print(
+    #    "Local state:",
+    #    read_local_state(
+    #        algod_client, account.address_from_private_key(user_private_key), app_id
+    #    ),
+    #)
 
     # wait for registration period to start
     wait_for_round(algod_client, voteEnd)
