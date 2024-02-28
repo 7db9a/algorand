@@ -6,7 +6,8 @@ def test_create_app(algorand):
     print("Created new app-id:", app_id)
     # Add calls to other test methods here
 
-def test_vote_app(algorand):
+def test_vote(algorand, app_args):
+    algorand.vote(app_args)
 
 
 if __name__ == "__main__":
@@ -18,4 +19,5 @@ if __name__ == "__main__":
     algorand = Vote(algod_address, algod_token, creator_mnemonic, user_mnemonic)
 
     test_create_app(algorand)
-    test_vote(algorand)
+    test_vote(algorand,[b"vote", b"choiceA"])
+
