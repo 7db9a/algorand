@@ -189,17 +189,27 @@ def format_state(state):
     for item in state:
         key = item["key"]
         value = item["value"]
-        formatted_key = base64.b64decode(key).decode("utf-8")
+        try:
+            # Try decoding as UTF-8. If it fails, handle as binary data
+            formatted_key = base64.b64decode(key).decode("utf-8")
+        except UnicodeDecodeError:
+            # If it's not a UTF-8 string, it might be binary data like an address
+            formatted_key = base64.b64decode(key).hex()  # Represent binary data in hex
+
         if value["type"] == 1:
             # byte string
-            if formatted_key == "voted":
+            try:
+                # Try decoding value as UTF-8
                 formatted_value = base64.b64decode(value["bytes"]).decode("utf-8")
-            else:
-                formatted_value = value["bytes"]
-            formatted[formatted_key] = formatted_value
+            except UnicodeDecodeError:
+                # If it's not a UTF-8 string, handle as binary data
+                formatted_value = base64.b64decode(value["bytes"]).hex()  # Represent binary data in hex
         else:
             # integer
-            formatted[formatted_key] = value["uint"]
+            formatted_value = value["uint"]
+
+        formatted[formatted_key] = formatted_value
+
     return formatted
 
 # Function to opt-in to an ASA (commented out by default)
@@ -377,7 +387,7 @@ def main():
     global_ints = (
         24  # 4 for setup + 20 for choices. Use a larger number for more choices.
     )
-    global_bytes = 1
+    global_bytes = 2
     global_schema = transaction.StateSchema(global_ints, global_bytes)
     local_schema = transaction.StateSchema(local_ints, local_bytes)
 

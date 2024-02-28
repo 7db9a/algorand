@@ -20,7 +20,7 @@ def approval_program():
 
     is_creator = Txn.sender() == App.globalGet(Bytes("Creator"))
 
-    get_vote_of_sender = App.localGetEx(Int(0), App.id(), Bytes("voted"))
+    get_vote_of_sender = App.globalGetEx(Int(0), Concat(Bytes("Vote_"), Txn.sender()))
 
     on_closeout = Seq(
         [
@@ -56,7 +56,6 @@ def approval_program():
     #balance_var = ScratchVar(TealType.uint64)
     balance = get_asa_balance_expr(asset_id)
 
-    # Modified on_vote section
     on_vote = Seq([
         check_asa_holder(1),
         Assert(
@@ -65,11 +64,15 @@ def approval_program():
                 Global.round() <= App.globalGet(Bytes("VoteEnd")),
             )
         ),
-        get_vote_of_sender,
-        balance,
-        If(get_vote_of_sender.hasValue(), Return(Int(0))),
-        If(balance.hasValue(), App.globalPut(choice, choice_tally + balance.value())),
-        App.localPut(Int(0), Bytes("voted"), choice),
+        get_vote_of_sender,  # Retrieve the previous vote of the sender using the updated key format
+        balance,  # Retrieve the balance of the asset for the sender
+        If(get_vote_of_sender.hasValue(), Return(Int(0))),  # Check if the sender has already voted
+        If(balance.hasValue(),
+           Seq([
+               App.globalPut(choice, choice_tally + balance.value()),  # Update the tally for the choice
+               App.globalPut(Concat(Bytes("Vote_"), Txn.sender()), choice),  # Record that the sender has voted using a unique key
+           ])
+        ),
         Return(Int(1)),
     ])
 
