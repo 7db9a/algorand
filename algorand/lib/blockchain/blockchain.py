@@ -8,6 +8,9 @@ from lib.utilities.utility import (
     wait_for_confirmation,
     get_private_key_from_mnemonic,
     intToBytes,
+    opt_in_app,
+    call_app,
+    read_global_state
 )
 
 class Vote:
@@ -21,6 +24,11 @@ class Vote:
         self.local_ints = 0
         self.local_bytes = 0
         self.app_id = None
+        self.status = self.client.status()
+        self.regBegin = self.status["last-round"] + 10
+        self.regEnd = self.regBegin + 10
+        self.voteBegin = self.regEnd + 1
+        self.voteEnd = self.voteBegin + 10
 
         with open('vote_approval.teal.tok', 'rb') as f:
             self.approval_program = f.read()
@@ -36,22 +44,15 @@ class Vote:
         global_schema = StateSchema(self.global_ints, self.global_bytes)
         local_schema = StateSchema(self.local_ints, self.local_bytes)
 
-        # configure registration and voting period
-        status = self.client.status()
-        regBegin = status["last-round"] + 10
-        regEnd = regBegin + 10
-        voteBegin = regEnd + 1
-        voteEnd = voteBegin + 10
-
-        print(f"Registration rounds: {regBegin} to {regEnd}")
-        print(f"Vote rounds: {voteBegin} to {voteEnd}")
+        print(f"Registration rounds: {self.regBegin} to {self.regEnd}")
+        print(f"Vote rounds: {self.voteBegin} to {self.voteEnd}")
 
         # create list of bytes for app args
         app_args = [
-            intToBytes(regBegin),
-            intToBytes(regEnd),
-            intToBytes(voteBegin),
-            intToBytes(voteEnd),
+            intToBytes(self.regBegin),
+            intToBytes(self.regEnd),
+            intToBytes(self.voteBegin),
+            intToBytes(self.voteEnd),
         ]
 
         if app_args is None:
@@ -78,3 +79,50 @@ class Vote:
         self.app_id = response['application-index']
 
         return self.app_id
+
+def vote(self, app_args=None):
+    sender = account.address_from_private_key(self.creator_private_key)
+
+    # opt-in to application
+    opt_in_app(self.client, self.user_private_key, self.app_id)
+
+    wait_for_round(self.client, voteBegin)
+
+    # call application without arguments
+    call_app(self.client, self.user_private_key, self.app_id, app_args)
+
+    # read local state of application from user account
+    #print(
+    #    "Local state:",
+    #    read_local_state(
+    #        self.client, account.address_from_private_key(self.user_private_key), self.app_id
+    #    ),
+    #)
+
+    # wait for registration period to start
+    wait_for_round(self.client, voteEnd)
+
+    # read global state of application
+    global_state = read_global_state(
+        self.client, sender, self.app_id
+    )
+    print("Global state:", global_state)
+
+    # Find the choice with the maximum votes
+    max_votes = 0
+    max_votes_choice = None
+    for key, value in global_state.items():
+        if key not in (
+            "RegBegin",
+            "RegEnd",
+            "VoteBegin",
+            "VoteEnd",
+            "Creator",
+            "TotalSupply"  # Exclude TotalSupply from the winner calculation
+        ) and isinstance(value, int):
+            if value > max_votes:
+                max_votes = value
+                max_votes_choice = key
+
+    print("The winner is:", max_votes_choice if max_votes_choice is not None else "No votes cast")
+
