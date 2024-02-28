@@ -15,21 +15,21 @@ from lib.utilities.utility import (
 )
 
 class Vote:
-    def __init__(self, algod_address, algod_token, creator_mnemonic, user_mnemonic):
+    def __init__(self, algod_address, algod_token, asset_id, creator_mnemonic, user_mnemonic, app_id=None):
         self.client = algod.AlgodClient(algod_token, algod_address)
         self.creator_private_key = get_private_key_from_mnemonic(creator_mnemonic)
         self.user_private_key = get_private_key_from_mnemonic(user_mnemonic)
-        self.asset_id = 1653  # Replace with the actual asset ID
+        self.asset_id = asset_id
         self.global_ints = 24  # Adjust as needed
         self.global_bytes = 2  # Adjust as needed
         self.local_ints = 0
         self.local_bytes = 0
-        self.app_id = None
         self.status = self.client.status()
         self.regBegin = self.status["last-round"] + 10
         self.regEnd = self.regBegin + 10
         self.voteBegin = self.regEnd + 1
         self.voteEnd = self.voteBegin + 10
+        self.app_id = app_id if app_id is not None else None
 
         with open('vote_approval.teal.tok', 'rb') as f:
             self.approval_program = f.read()
