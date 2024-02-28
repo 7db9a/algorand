@@ -1,7 +1,9 @@
-from lib.blockchain.blockchain import Algorand
+from lib.blockchain import Vote
 
 def run_tests(algorand):
-    algorand.create_app()
+    app_id = algorand.create_app()
+    assert app_id is not None and app_id > 0, "Failed to create application"
+    print("Created new app-id:", app_id)
     # Add calls to other test methods here
 
 if __name__ == "__main__":
@@ -10,5 +12,5 @@ if __name__ == "__main__":
     creator_mnemonic = "twin pumpkin plastic stage fortune shallow melt betray ribbon receive claim enrich price exile absent avoid woman toilet print settle shiver inform rookie absorb unaware"
     user_mnemonic = creator_mnemonic
 
-    algorand = Algorand(algod_address, algod_token, creator_mnemonic, user_mnemonic)
+    algorand = Vote(algod_address, algod_token, creator_mnemonic, user_mnemonic)
     run_tests(algorand)
