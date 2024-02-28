@@ -10,7 +10,7 @@ from lib.utilities.utility import (
     intToBytes,
 )
 
-class Algorand:
+class Vote:
     def __init__(self, algod_address, algod_token, creator_mnemonic, user_mnemonic):
         self.client = algod.AlgodClient(algod_token, algod_address)
         self.creator_private_key = get_private_key_from_mnemonic(creator_mnemonic)
@@ -76,5 +76,5 @@ class Algorand:
         wait_for_confirmation(self.client, tx_id)
         response = self.client.pending_transaction_info(tx_id)
         self.app_id = response['application-index']
-        assert self.app_id is not None and self.app_id > 0, "Failed to create application"
-        print("Created new app-id:", self.app_id)
+
+        return self.app_id
