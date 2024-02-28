@@ -76,7 +76,7 @@ class AlgorandVoteTestSuite:
         wait_for_confirmation(self.client, tx_id)
         response = self.client.pending_transaction_info(tx_id)
         self.app_id = response['application-index']
-        assert self.app_id is not None and self.app_id == 0, "Failed to create application"
+        assert self.app_id is not None and self.app_id > 0, "Failed to create application"
         print("Created new app-id:", self.app_id)
 
     def run_tests(self):
