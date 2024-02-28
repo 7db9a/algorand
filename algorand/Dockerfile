@@ -18,6 +18,8 @@ RUN pip3 install py-algorand-sdk pyteal
 # Copy the network template, initialization script, and experiment scripts
 COPY algorand/configs/my_network_template.json /algod/my_network_template.json
 COPY algorand/initialize-network.sh /algod/initialize-network.sh
+COPY algorand/lib/ /algod/lib/
+COPY algorand/tests/ /algod/tests/
 COPY algorand/experiments/ /algod/experiments/
 COPY algorand/examples/ /algod/examples/
 
