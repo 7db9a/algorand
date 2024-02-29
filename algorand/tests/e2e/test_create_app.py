@@ -1,8 +1,9 @@
 from lib.blockchain import Vote
 
 def test_create_app(vote_app):
-    app_id = vote_app.create_app()
+    (txid, app_id) = vote_app.create_app()
     assert app_id is not None and app_id > 0, "Failed to create application"
+    print("Tx ID:", txid)
     print("Created new app-id:", app_id)
     return app_id
     # Add calls to other test methods here

@@ -79,7 +79,7 @@ class Vote:
         response = self.client.pending_transaction_info(tx_id)
         self.app_id = response['application-index']
 
-        return self.app_id
+        return tx_id, self.app_id
 
     def vote(self, app_args=None):
         sender = account.address_from_private_key(self.creator_private_key)
