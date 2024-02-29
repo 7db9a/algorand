@@ -112,8 +112,7 @@ class Vote:
         global_state = read_global_state(
             self.client, sender, self.app_id
         )
-        print("Global state:", global_state)
-    
+
         # Find the choice with the maximum votes
         max_votes = 0
         max_votes_choice = None
@@ -131,4 +130,5 @@ class Vote:
                     max_votes_choice = key
     
         print("The winner is:", max_votes_choice if max_votes_choice is not None else "No votes cast")
+        return global_state
 

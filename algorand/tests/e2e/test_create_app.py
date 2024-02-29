@@ -8,8 +8,9 @@ def test_create_app(vote_app):
     # Add calls to other test methods here
 
 def test_vote(vote_app, app_args):
-    vote_app.vote(app_args)
-
+    global_state = vote_app.vote(app_args)
+    print(global_state)
+    assert global_state["choiceA"] == 1_000_000
 
 if __name__ == "__main__":
     algod_address = "http://127.0.0.1:8080"
@@ -27,5 +28,4 @@ if __name__ == "__main__":
 
     vote_app_creator = Vote(algod_address, algod_token, asset_id, user1_mnemonic, user1_mnemonic, app_id)
     test_vote(vote_app_creator, [b"vote", b"choiceA"])
-
 
