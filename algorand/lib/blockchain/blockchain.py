@@ -86,11 +86,14 @@ class Vote:
         global_state = read_global_state(self.client, sender, self.app_id)
 
         print(f"Global state: {global_state}")
-        # Check the 'Winner' key in the global state
-        winner = global_state["Winner"]
+
+        # Safely get the 'Winner' key from the global state
+        winner = global_state.get("Winner")
+
         if winner:
             print("The winner is:", winner)
         else:
             print("No winner declared yet")
+
 
         return global_state
