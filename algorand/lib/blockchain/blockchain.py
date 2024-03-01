@@ -22,7 +22,7 @@ class Vote:
         self.user_private_key = get_private_key_from_mnemonic(user_mnemonic)
         self.asset_id = asset_id
         self.global_ints = 24  # Adjust as needed
-        self.global_bytes = 3  # Adjust as needed
+        self.global_bytes = 4  # Adjust as needed
         self.local_ints = 0
         self.local_bytes = 0
         self.status = self.client.status()
@@ -83,7 +83,7 @@ class Vote:
         call_app(self.client, self.user_private_key, self.app_id, app_args)
 
         # read global state of application
-        global_state = read_global_state(self.client, sender, self.app_id)
+        global_state = read_global_state(self.client, self.app_id)
 
         print(f"Global state: {global_state}")
 
