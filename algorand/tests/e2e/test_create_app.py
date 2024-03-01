@@ -30,6 +30,6 @@ if __name__ == "__main__":
     vote_app_user1 = Vote(algod_address, algod_token, asset_id, user1_mnemonic, user1_mnemonic, app_id)
 
     vote_app_creator = Vote(algod_address, algod_token, asset_id, creator_mnemonic, creator_mnemonic, app_id)
-    #test_vote(vote_app_user1, [b"vote", b"choiceA"])
+    test_vote(vote_app_user1, [b"vote", b"choiceA"])
     test_vote(vote_app_creator, [b"vote", b"choiceA"])
 
