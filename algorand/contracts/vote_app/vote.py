@@ -43,22 +43,19 @@ def approval_program():
         If(get_vote_of_sender.hasValue(), Return(Int(0))),
         If(balance.hasValue(),
            Seq([
-               # First, check if this vote will trigger a winner declaration
                If(
-                   choice_tally + balance.value() == App.globalGet(Bytes("TotalSupply")),
+                   is_winner(choice_tally, balance.value(), 50),  # Check if 50% threshold is met
                    Seq([
                        App.globalPut(Bytes("Winner"), choice),  # Declare the winner
-                       App.globalPut(choice, choice_tally + balance.value()),  # Then update the tally
+                       App.globalPut(choice, choice_tally + balance.value()),  # Update the tally
                    ]),
-                   # If not triggering a winner, just update the tally
-                   App.globalPut(choice, choice_tally + balance.value())
+                   App.globalPut(choice, choice_tally + balance.value())  # Just update the tally
                ),
-               App.globalPut(Concat(Bytes("Vote_"), Txn.sender()), choice),  # Record that the sender has voted
+               App.globalPut(Concat(Bytes("Vote_"), Txn.sender()), choice),  # Record the vote
            ])
         ),
         Return(Int(1)),
     ])
-
 
     program = Cond(
         [Txn.application_id() == Int(0), on_creation],
@@ -99,6 +96,11 @@ def check_asa_holder(min_balance: int = 1):
         Assert(balance.hasValue()),
         Assert(balance.value() >= Int(min_balance))
     ])
+
+def is_winner(tally, balance, winning_percentage):
+    totalSupply = App.globalGet(Bytes("TotalSupply"))
+    winningThreshold = (totalSupply * Int(winning_percentage)) / Int(100)
+    return tally + balance > winningThreshold
 
 def check_winner_exists():
     winnerExistsVar = ScratchVar(TealType.uint64)
