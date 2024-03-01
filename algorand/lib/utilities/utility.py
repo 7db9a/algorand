@@ -143,12 +143,14 @@ def read_local_state(client, addr, app_id):
 
 
 # read app global state
-def read_global_state(client, addr, app_id):
-    results = client.account_info(addr)
-    apps_created = results["created-apps"]
-    for app in apps_created:
-        if app["id"] == app_id:
-            return format_state(app["params"]["global-state"])
+def read_global_state(client, app_id):
+    # Fetch application information
+    app_info = client.application_info(app_id)
+
+    # Check if the application information is available
+    if "params" in app_info and "global-state" in app_info["params"]:
+        return format_state(app_info["params"]["global-state"])
+
     return {}
 
 # Modify the call_app function to include foreign_assets
