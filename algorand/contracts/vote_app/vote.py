@@ -43,17 +43,22 @@ def approval_program():
         If(get_vote_of_sender.hasValue(), Return(Int(0))),
         If(balance.hasValue(),
            Seq([
-               App.globalPut(choice, choice_tally + balance.value()),  # Update the tally for the choice
-               App.globalPut(Concat(Bytes("Vote_"), Txn.sender()), choice),  # Record that the sender has voted
+               # First, check if this vote will trigger a winner declaration
                If(
-                   # Check if the total votes for this choice reach or exceed TotalSupply after updating the tally
-                   App.globalGet(choice) + balance.value() == App.globalGet(Bytes("TotalSupply")),
-                   App.globalPut(Bytes("Winner"), choice)  # Mark this choice as the winner
+                   choice_tally + balance.value() == App.globalGet(Bytes("TotalSupply")),
+                   Seq([
+                       App.globalPut(Bytes("Winner"), choice),  # Declare the winner
+                       App.globalPut(choice, choice_tally + balance.value()),  # Then update the tally
+                   ]),
+                   # If not triggering a winner, just update the tally
+                   App.globalPut(choice, choice_tally + balance.value())
                ),
+               App.globalPut(Concat(Bytes("Vote_"), Txn.sender()), choice),  # Record that the sender has voted
            ])
         ),
         Return(Int(1)),
     ])
+
 
     program = Cond(
         [Txn.application_id() == Int(0), on_creation],
