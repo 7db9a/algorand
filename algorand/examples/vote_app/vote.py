@@ -4,73 +4,52 @@ from pyteal import *
 
 
 def approval_program():
-    on_creation = Seq(
-        [
-            check_asa_holder(1),
-            App.globalPut(Bytes("Creator"), Txn.sender()),
-            Assert(Txn.application_args.length() == Int(5)),  # Changed from 4 to 5 to account for TotalSupply argument
-            App.globalPut(Bytes("RegBegin"), Btoi(Txn.application_args[0])),
-            App.globalPut(Bytes("RegEnd"), Btoi(Txn.application_args[1])),
-            App.globalPut(Bytes("VoteBegin"), Btoi(Txn.application_args[2])),
-            App.globalPut(Bytes("VoteEnd"), Btoi(Txn.application_args[3])),
-            App.globalPut(Bytes("TotalSupply"), Btoi(Txn.application_args[4])),  # Save TotalSupply in the global state
-            Return(Int(1)),
-        ]
-    )
+    on_creation = Seq([
+        check_asa_holder(1),
+        App.globalPut(Bytes("Creator"), Txn.sender()),
+        Assert(Txn.application_args.length() == Int(1)), # Update argument count
+        App.globalPut(Bytes("TotalSupply"), Btoi(Txn.application_args[0])), # Save TotalSupply in the global state
+        Return(Int(1)),
+    ])
 
     is_creator = Txn.sender() == App.globalGet(Bytes("Creator"))
 
     get_vote_of_sender = App.globalGetEx(Int(0), Concat(Bytes("Vote_"), Txn.sender()))
 
-    on_closeout = Seq(
-        [
-            get_vote_of_sender,
-            If(
-                And(
-                    Global.round() <= App.globalGet(Bytes("VoteEnd")),
-                    get_vote_of_sender.hasValue(),
-                ),
-                App.globalPut(
-                    get_vote_of_sender.value(),
-                    App.globalGet(get_vote_of_sender.value()) - Int(1),
-                ),
+    on_closeout = Seq([
+        get_vote_of_sender,
+        If(
+            get_vote_of_sender.hasValue(),
+            App.globalPut(
+                get_vote_of_sender.value(),
+                App.globalGet(get_vote_of_sender.value()) - Int(1),
             ),
-            Return(Int(1)),
-        ]
-    )
-
-    on_register = Return(
-        And(
-            Global.round() >= App.globalGet(Bytes("RegBegin")),
-            Global.round() <= App.globalGet(Bytes("RegEnd")),
-        )
-    )
+        ),
+        Return(Int(1)),
+    ])
 
     choice = Txn.application_args[1]
     choice_tally = App.globalGet(choice)
 
-    # Define your asset ID
-    asset_id = Int(1653)  # Replace with your actual ASA ID
+    asset_id = Int(1653) # Replace with your actual ASA ID
 
-    # Declare a scratch variable to store the ASA balance
-    #balance_var = ScratchVar(TealType.uint64)
     balance = get_asa_balance_expr(asset_id)
 
     on_vote = Seq([
         check_asa_holder(1),
-        Assert(
-            And(
-                Global.round() >= App.globalGet(Bytes("VoteBegin")),
-                Global.round() <= App.globalGet(Bytes("VoteEnd")),
-            )
-        ),
-        get_vote_of_sender,  # Retrieve the previous vote of the sender using the updated key format
-        balance,  # Retrieve the balance of the asset for the sender
-        If(get_vote_of_sender.hasValue(), Return(Int(0))),  # Check if the sender has already voted
+        If(check_winner_exists() == Int(0), Return(Int(0))),
+        get_vote_of_sender,
+        balance,
+        If(get_vote_of_sender.hasValue(), Return(Int(0))),
         If(balance.hasValue(),
            Seq([
                App.globalPut(choice, choice_tally + balance.value()),  # Update the tally for the choice
-               App.globalPut(Concat(Bytes("Vote_"), Txn.sender()), choice),  # Record that the sender has voted using a unique key
+               App.globalPut(Concat(Bytes("Vote_"), Txn.sender()), choice),  # Record that the sender has voted
+               If(
+                   # Check if the total votes for this choice reach or exceed TotalSupply after updating the tally
+                   App.globalGet(choice) + balance.value() == App.globalGet(Bytes("TotalSupply")),
+                   App.globalPut(Bytes("Winner"), choice)  # Mark this choice as the winner
+               ),
            ])
         ),
         Return(Int(1)),
@@ -81,49 +60,57 @@ def approval_program():
         [Txn.on_completion() == OnComplete.DeleteApplication, Return(is_creator)],
         [Txn.on_completion() == OnComplete.UpdateApplication, Return(is_creator)],
         [Txn.on_completion() == OnComplete.CloseOut, on_closeout],
-        [Txn.on_completion() == OnComplete.OptIn, on_register],
-        [Txn.application_args[0] == Bytes("vote"), on_vote],
+        [Txn.on_completion() == OnComplete.OptIn, Return(Int(1))],  # Handle the OptIn logic
+        [Txn.application_args[0] == Bytes("vote"), on_vote]
     )
 
     return program
-
 
 def clear_state_program():
     get_vote_of_sender = App.localGetEx(Int(0), App.id(), Bytes("voted"))
-    program = Seq(
-        [
-            get_vote_of_sender,
-            If(
-                And(
-                    Global.round() <= App.globalGet(Bytes("VoteEnd")),
-                    get_vote_of_sender.hasValue(),
-                ),
-                App.globalPut(
-                    get_vote_of_sender.value(),
-                    App.globalGet(get_vote_of_sender.value()) - Int(1),
-                ),
+    program = Seq([
+        get_vote_of_sender,
+        If(
+            get_vote_of_sender.hasValue(),
+            App.globalPut(
+                get_vote_of_sender.value(),
+                App.globalGet(get_vote_of_sender.value()) - Int(1),
             ),
-            Return(Int(1)),
-        ]
-    )
+        ),
+        Return(Int(1)),
+    ])
 
     return program
 
-# New function to get ASA balance as an expression
 def get_asa_balance_expr(asset_id):
     balance = AssetHolding.balance(Txn.sender(), asset_id)
     return balance
 
 def check_asa_holder(min_balance: int = 1):
-    # Hardcoding the asset ID (1653)
     asset_id = Int(1653)
-
-    # The first argument should be the account address (Txn.sender()), and the second should be the asset ID (asset_id)
     balance = AssetHolding.balance(Txn.sender(), asset_id)
     return Seq([
-        balance,  # Load the asset balance
-        Assert(balance.hasValue()),  # Ensure the user holds the asset
-        Assert(balance.value() >= Int(min_balance))  # Check if the balance is sufficient
+        balance,
+        Assert(balance.hasValue()),
+        Assert(balance.value() >= Int(min_balance))
+    ])
+
+def check_winner_exists():
+    winnerExistsVar = ScratchVar(TealType.uint64)
+    winnerValueVar = ScratchVar(TealType.bytes)
+    result = App.globalGetEx(Int(0), Bytes("Winner"))
+    return Seq([
+        result,
+        winnerExistsVar.store(result.hasValue()),
+        winnerValueVar.store(If(result.hasValue(), result.value(), Bytes(""))),
+        If(
+            And(
+                winnerExistsVar.load(),
+                winnerValueVar.load() != Bytes("")
+            ),
+            Int(0),  # A winner is declared, return 0 (False)
+            Int(1)   # No winner yet, return 1 (True)
+        )
     ])
 
 if __name__ == "__main__":
@@ -134,3 +121,4 @@ if __name__ == "__main__":
     with open("vote_clear_state.teal", "w") as f:
         compiled = compileTeal(clear_state_program(), mode=Mode.Application, version=4)
         f.write(compiled)
+

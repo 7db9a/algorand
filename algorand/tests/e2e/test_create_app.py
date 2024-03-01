@@ -11,7 +11,7 @@ def test_create_app(vote_app):
 def test_vote(vote_app, app_args):
     global_state = vote_app.vote(app_args)
     print(global_state)
-    assert global_state["choiceA"] == 1_000_000
+    assert global_state["Winner"] == "choiceA"
 
 if __name__ == "__main__":
     algod_address = "http://127.0.0.1:8080"

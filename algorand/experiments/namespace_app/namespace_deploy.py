@@ -60,7 +60,7 @@ def create_app(client, private_key):
         params = client.suggested_params()
 
         # Define the application schemas
-        global_schema = transaction.StateSchema(num_uints=0, num_byte_slices=5)
+        global_schema = transaction.StateSchema(num_uints=0, num_byte_slices=9)
         local_schema = transaction.StateSchema(num_uints=0, num_byte_slices=0)
 
         # Create unsigned transaction
