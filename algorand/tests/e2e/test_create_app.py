@@ -22,11 +22,13 @@ if __name__ == "__main__":
     creator_mnemonic = "twin pumpkin plastic stage fortune shallow melt betray ribbon receive claim enrich price exile absent avoid woman toilet print settle shiver inform rookie absorb unaware"
 
     # User1 Info
-    user1_mnemonic =  "twin pumpkin plastic stage fortune shallow melt betray ribbon receive claim enrich price exile absent avoid woman toilet print settle shiver inform rookie absorb unaware"
-
+    user1_mnemonic = "brain rough jazz defy absent ability jeans much hire retire metal tragic fury culture stem beach farm upset relief stove sound comic bunker able exist"
     vote_app_creator = Vote(algod_address, algod_token, asset_id, creator_mnemonic, creator_mnemonic)
     app_id = test_create_app(vote_app_creator)
 
-    vote_app_creator = Vote(algod_address, algod_token, asset_id, user1_mnemonic, user1_mnemonic, app_id)
+    # Initialize so user1 can opt in to asset
+    vote_app_user1 = Vote(algod_address, algod_token, asset_id, user1_mnemonic, user1_mnemonic, app_id)
+
+    vote_app_creator = Vote(algod_address, algod_token, asset_id, creator_mnemonic, creator_mnemonic, app_id)
     test_vote(vote_app_creator, [b"vote", b"choiceA"])
 

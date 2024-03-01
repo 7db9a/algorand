@@ -9,6 +9,7 @@ from lib.utilities.utility import (
     wait_for_round,
     get_private_key_from_mnemonic,
     intToBytes,
+    opt_in_asa,
     opt_in_app,
     call_app,
     read_global_state
@@ -30,6 +31,8 @@ class Vote:
         self.voteBegin = self.regEnd + 1
         self.voteEnd = self.voteBegin + 10
         self.app_id = app_id if app_id is not None else None
+
+        opt_in_asa(self.client, self.creator_private_key, self.asset_id)
 
         with open('vote_approval.teal.tok', 'rb') as f:
             self.approval_program = f.read()

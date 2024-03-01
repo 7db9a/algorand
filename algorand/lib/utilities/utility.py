@@ -69,7 +69,7 @@ def opt_in_app(client, private_key, index):
     print("OptIn to app-id:", transaction_response["txn"]["txn"]["apid"])
 
 # Function to opt-in to an ASA (commented out by default)
-def optin_to_asa(client, private_key, asset_id):
+def opt_in_asa(client, private_key, asset_id):
     """
     Opt-in to an ASA for the account associated with the provided private key.
 

@@ -56,3 +56,26 @@ Enter the algorand container.
 
 6. **Compile Teal File**:
    `goal clerk compile app_example.teal`
+
+7. **OptIn ASA**
+
+Accounts must opt-in to asa's to be able to accept transfer.
+
+```
+goal asset send -a 0 --assetid [Asset ID] --from [Receiver's Address] --to [Receiver's Address]
+```
+
+7. **Transfer and Asa**
+
+```
+goal asset send -a [Amount] --assetid [Asset ID] --from [Sender's Address] --to [Receiver's Address]
+```
+If the sender's account is protected by a passphrase, you will need to enter it to sign the transaction.
+
+8. **OptIn Contract**
+
+Accounts must opt-in to contracts to interact with it.
+
+```
+goal app optin --app-id [App ID] --from [Account Address]
+```
