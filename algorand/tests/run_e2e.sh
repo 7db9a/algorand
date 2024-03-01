@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Compile vote contract app.
-python examples/vote_app/vote.py
+python contracts/vote_app/vote.py
 
 # Bunde teal vote contract code for deployment
 goal clerk compile vote_clear_state.teal -d /algod/data/net1/Primary
