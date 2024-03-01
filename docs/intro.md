@@ -24,40 +24,63 @@ and
 
 Enter the algorand container.
 
-1. **Create TEAL Script**:
-   Save the following script as `hello_world.teal`:
-   `#pragma version 2
-   int 1`
+## Commands, algorand
 
-2. **Compile TEAL Script**:
-   `goal clerk compile hello_world.teal -d /algod/data/net1/Primary`
+Note: Replace `<Primary or Node>` with either `Primary` or `Node` based on your Algorand node configuration.
 
-   Note you can choose to interact with `Primary` or `Node` instance algod.
+**Create TEAL Script**:
+Save the following script as `hello_world.teal`:
+
+``
+#pragma version 2
+int 1
+``
+
+**Compile TEAL Script**:
+```
+goal clerk compile hello_world.teal -d /algod/data/net1/<Primary or Node>
+```
+
+Note you can choose to interact with `Primary` or `Node` instance algod.
 
 ## Deploying the Smart Contract
 
-1. **List Accounts**:
-   `goal account list -d /algod/data/net1/Primary`
+**List Accounts**:
+```
+goal account list -d /algod/data/net1/Primary
+```
 
-2. **Get Account Mnemonic**:
+**Get Account Info**:
+```
+goal account info --address [Account Address] -d [data directory]
+```
 
-   `goal account export -a <account_address> -d /algod/data/net1/Primary`
+**Get Account Mnemonic**:
+``
+goal account export -a <account_address> -d /algod/data/net1/<Primary or Node>
+``
 
-3. **Identify Sender Account**:
-   Choose an account with a positive balance from the list.
+**Identify Sender Account**:
+Choose an account with a positive balance from the list.
 
-4. **Send Transaction**:
-   `goal clerk send -a 0 -f [SenderAccount] -t [ContractAddress] -d /algod/data/net1/Node`
-   Replace `[SenderAccount]` with the sender account address and `[ContractAddress]` with the address of the compiled smart contract.
+**Send Transaction**:
+``
+goal clerk send -a 0 -f [SenderAccount] -t [ContractAddress] -d /algod/data/net1/<Primary or Node>
+``
+Replace `[SenderAccount]` with the sender account address and `[ContractAddress]` with the address of the compiled smart contract.
 
-5. **Check Transaction**:
-   `goal node status -d /algod/data/net1/Node`
-   Compare the current round with the transaction round to ensure it's processed.
+**Check Transaction**:
+``
+goal node status -d /algod/data/net1/<Primary or Node>
+``
+Compare the current round with the transaction round to ensure it's processed.
 
-6. **Compile Teal File**:
-   `goal clerk compile app_example.teal`
+**Compile Teal File**:
+``
+goal clerk compile app_example.teal
+``
 
-7. **OptIn ASA**
+**OptIn ASA**
 
 Accounts must opt-in to asa's to be able to accept transfer.
 
@@ -65,14 +88,24 @@ Accounts must opt-in to asa's to be able to accept transfer.
 goal asset send -a 0 --assetid [Asset ID] --from [Receiver's Address] --to [Receiver's Address]
 ```
 
-7. **Transfer and Asa**
+**Unfreeze ASA**
+
+The freeze address must unfreeze any asa of an account for a transfer to work.
 
 ```
-goal asset send -a [Amount] --assetid [Asset ID] --from [Sender's Address] --to [Receiver's Address]
+goal asset freeze --assetid [Asset ID] --freezer [Freeze Account Address] --account [Target Account Address] --freeze=false -d /algod/data/net1/<Primary or Node>
+```
+
+Note: `--freeze=true` freezes the account's asa.
+
+**Transfer an Asa**
+
+```
+goal asset send -a [Amount] --assetid [Asset ID] --from [Sender's Address] --to [Receiver's Address] -d /algod/data/net1/<Primary or Node>
 ```
 If the sender's account is protected by a passphrase, you will need to enter it to sign the transaction.
 
-8. **OptIn Contract**
+**OptIn Contract**
 
 Accounts must opt-in to contracts to interact with it.
 
