@@ -32,6 +32,7 @@ class Vote:
         self.voteEnd = self.voteBegin + 10
         self.app_id = app_id if app_id is not None else None
 
+        # Shouldn't be needed at all
         opt_in_asa(self.client, self.creator_private_key, self.asset_id)
 
         with open('vote_approval.teal.tok', 'rb') as f:
@@ -71,14 +72,14 @@ class Vote:
 
         return tx_id, self.app_id
 
+    def optin(self):
+        opt_in_app(self.client, self.user_private_key, self.app_id)
+
     def vote(self, app_args=None):
         sender = account.address_from_private_key(self.creator_private_key)
 
         print(f"vote app id {self.app_id}")
 
-        # opt-in to application
-        opt_in_app(self.client, self.user_private_key, self.app_id)
- 
         # call application without arguments
         call_app(self.client, self.user_private_key, self.app_id, app_args)
 

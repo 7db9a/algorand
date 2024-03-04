@@ -11,7 +11,6 @@ def test_create_app(vote_app):
 def test_vote(vote_app, app_args):
     global_state = vote_app.vote(app_args)
     print(global_state)
-    #assert global_state["Winner"] == "choiceA"
 
 if __name__ == "__main__":
     algod_address = "http://127.0.0.1:8080"
@@ -23,13 +22,25 @@ if __name__ == "__main__":
 
     # User1 Info
     user1_mnemonic = "brain rough jazz defy absent ability jeans much hire retire metal tragic fury culture stem beach farm upset relief stove sound comic bunker able exist"
+
+    # User2 Info
+    user2_mnemonic = "mass slide nature lady river smart dismiss item cave topple place remember oxygen title travel mixture team focus live human burger knock achieve about giggle"
+
     vote_app_creator = Vote(algod_address, algod_token, asset_id, creator_mnemonic, creator_mnemonic)
+
     app_id = test_create_app(vote_app_creator)
 
     # Initialize so user1 can opt in to asset
     vote_app_user1 = Vote(algod_address, algod_token, asset_id, user1_mnemonic, user1_mnemonic, app_id)
 
-    vote_app_creator = Vote(algod_address, algod_token, asset_id, creator_mnemonic, creator_mnemonic, app_id)
+    # Initialize so user1 can opt in to asset
+    vote_app_user2 = Vote(algod_address, algod_token, asset_id, user2_mnemonic, user2_mnemonic, app_id)
+
+    vote_app_user1.optin()
+    vote_app_user2.optin()
+
     test_vote(vote_app_user1, [b"vote", b"choiceA", b"child-oid_a1"])
+    #test_vote(vote_app_user1, [b"vote", b"choiceA", b"child-oid_a1"])
+    #test_vote(vote_app_user2, [b"vote", b"choiceA", b"child-oid_a1"])
     test_vote(vote_app_creator, [b"vote", b"choiceB", b"child_oid_b1"])
 
