@@ -22,7 +22,7 @@ class Vote:
         self.user_private_key = get_private_key_from_mnemonic(user_mnemonic)
         self.asset_id = asset_id
         self.global_ints = 24  # Adjust as needed
-        self.global_bytes = 6  # Adjust as needed
+        self.global_bytes = 8  # Adjust as needed
         self.local_ints = 0
         self.local_bytes = 0
         self.status = self.client.status()
