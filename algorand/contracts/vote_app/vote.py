@@ -13,8 +13,11 @@ def approval_program():
     ])
 
     is_creator = Txn.sender() == App.globalGet(Bytes("Creator"))
+    choice = Txn.application_args[1]
+    choice_tally = App.globalGet(choice)
 
-    get_vote_of_sender = App.globalGetEx(Int(0), Concat(Bytes("Vote_"), Txn.sender()))
+    get_vote_of_sender = App.globalGetEx(Int(0), Concat(Concat(Bytes("Vote_"), Txn.sender()), choice))
+    
 
     on_closeout = Seq([
         get_vote_of_sender,
@@ -28,9 +31,6 @@ def approval_program():
         Return(Int(1)),
     ])
 
-    choice = Txn.application_args[1]
-    choice_tally = App.globalGet(choice)
-
     asset_id = Int(1653) # Replace with your actual ASA ID
 
     balance = get_asa_balance_expr(asset_id)
@@ -43,13 +43,12 @@ def approval_program():
         If(get_vote_of_sender.hasValue(), Return(Int(0))),
         If(balance.hasValue(),
            Seq([
-               # Use choice_existence_check function
-               If(choice_existence_check(choice) == Int(0),
-                  Seq([
-                      App.globalPut(Concat(choice, Bytes("_child")), Txn.application_args[2]),
-                  ])
-               ),
-               # Update tally for existing choice
+               # Check if choice exists. If not, initialize it.
+               #If(choice_existence_check(choice) == Int(0),
+               #   App.globalPut(choice, Int(0)), # Initialize choice tally if it doesn't exist
+               #),
+               # Update choice_child regardless of choice existence
+               App.globalPut(Concat(choice, Bytes("_child")), Txn.application_args[2]),
                If(
                    is_winner(choice_tally, balance.value(), 50),
                    Seq([
