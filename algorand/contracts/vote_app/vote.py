@@ -43,15 +43,22 @@ def approval_program():
         If(get_vote_of_sender.hasValue(), Return(Int(0))),
         If(balance.hasValue(),
            Seq([
-               If(
-                   is_winner(choice_tally, balance.value(), 50),  # Check if 50% threshold is met
-                   Seq([
-                       App.globalPut(Bytes("Winner"), choice),  # Declare the winner
-                       App.globalPut(choice, choice_tally + balance.value()),  # Update the tally
-                   ]),
-                   App.globalPut(choice, choice_tally + balance.value())  # Just update the tally
+               # Use choice_existence_check function
+               If(choice_existence_check(choice) == Int(0),
+                  Seq([
+                      App.globalPut(Concat(choice, Bytes("_child")), Txn.application_args[2]),
+                  ])
                ),
-               App.globalPut(Concat(Bytes("Vote_"), Txn.sender()), choice),  # Record the vote
+               # Update tally for existing choice
+               If(
+                   is_winner(choice_tally, balance.value(), 50),
+                   Seq([
+                       App.globalPut(Bytes("Winner"), choice),
+                       App.globalPut(choice, choice_tally + balance.value()),
+                   ]),
+                   App.globalPut(choice, choice_tally + balance.value())
+               ),
+               App.globalPut(Concat(Bytes("Vote_"), Txn.sender()), choice),
            ])
         ),
         Return(Int(1)),
@@ -101,6 +108,26 @@ def is_winner(tally, balance, winning_percentage):
     totalSupply = App.globalGet(Bytes("TotalSupply"))
     winningThreshold = (totalSupply * Int(winning_percentage)) / Int(100)
     return tally + balance > winningThreshold
+
+
+def choice_existence_check(choice):
+    choiceExistsVar = ScratchVar(TealType.uint64)
+    choiceValueVar = ScratchVar(TealType.bytes)
+    result = App.globalGetEx(Int(0), choice)
+
+    return Seq([
+        result,
+        choiceExistsVar.store(result.hasValue()),
+        choiceValueVar.store(If(result.hasValue(), result.value(), Bytes(""))),
+        If(
+            And(
+                choiceExistsVar.load(),
+                choiceValueVar.load() != Bytes("")
+            ),
+            Int(1),  # Choice exists, return 1 (True)
+            Int(0)   # Choice does not exist, return 0 (False)
+        )
+    ])
 
 def check_winner_exists():
     winnerExistsVar = ScratchVar(TealType.uint64)
