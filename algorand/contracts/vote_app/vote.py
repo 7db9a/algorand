@@ -35,6 +35,12 @@ def approval_program():
 
     balance = get_asa_balance_expr(asset_id)
 
+    choice_existence = choice_existence_check(choice)
+    #original_voter_exists_check = choice_existence_check(Concat(Bytes("OriginalVoter_"), choice, Txn.sender()))
+    original_voter_exists_check = compare_global_value(
+        Concat(Bytes("OriginalVoter_"), choice),
+        Txn.sender()
+    )
     on_vote = Seq([
         check_asa_holder(1),
         If(check_winner_exists() == Int(0), Return(Int(0))),
@@ -43,12 +49,20 @@ def approval_program():
         If(get_vote_of_sender.hasValue(), Return(Int(0))),
         If(balance.hasValue(),
            Seq([
-               # Check if choice exists. If not, initialize it.
-               #If(choice_existence_check(choice) == Int(0),
-               #   App.globalPut(choice, Int(0)), # Initialize choice tally if it doesn't exist
-               #),
-               # Update choice_child regardless of choice existence
-               App.globalPut(Concat(choice, Bytes("_child")), Txn.application_args[2]),
+               # Record first (original) voter and track.
+               If(choice_existence == Int(0),
+                  Seq([
+                      App.globalPut(Concat(Bytes("OriginalVoter_"), choice), Txn.sender()),
+                  ])
+               ),
+               # If the choice either does not exist or does exist, then proceed
+               If(Or(choice_existence == Int(0), original_voter_exists_check == Int(1)),
+                  Seq([
+                      # Only set <choice>_child if the choice doesn't exist or if it does exist
+                      App.globalPut(Concat(choice, Bytes("_child")), Txn.application_args[2]),
+                      # Other operations...
+                  ])
+               ),
                If(
                    is_winner(choice_tally, balance.value(), 50),
                    Seq([
@@ -109,24 +123,32 @@ def is_winner(tally, balance, winning_percentage):
     return tally + balance > winningThreshold
 
 
+
 def choice_existence_check(choice):
-    choiceExistsVar = ScratchVar(TealType.uint64)
-    choiceValueVar = ScratchVar(TealType.bytes)
     result = App.globalGetEx(Int(0), choice)
 
     return Seq([
         result,
-        choiceExistsVar.store(result.hasValue()),
-        choiceValueVar.store(If(result.hasValue(), result.value(), Bytes(""))),
-        If(
-            And(
-                choiceExistsVar.load(),
-                choiceValueVar.load() != Bytes("")
-            ),
-            Int(1),  # Choice exists, return 1 (True)
-            Int(0)   # Choice does not exist, return 0 (False)
+        If(result.hasValue(),
+           Int(1),  # Choice exists, return 1 (True)
+           Int(0)   # Choice does not exist, return 0 (False)
         )
     ])
+
+def compare_global_value(key, value_to_compare):
+    result = App.globalGetEx(Int(0), key)
+
+    return Seq([
+        result,
+        If(result.hasValue(),
+           If(BytesEq(result.value(), value_to_compare),
+              Int(1),  # Value matches, return 1 (True)
+              Int(0)   # Value does not match, return 0 (False)
+           ),
+           Int(0)   # Key does not exist, return 0 (False)
+        )
+    ])
+
 
 def check_winner_exists():
     winnerExistsVar = ScratchVar(TealType.uint64)
