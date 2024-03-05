@@ -53,6 +53,7 @@ def approval_program():
                If(choice_existence == Int(0),
                   Seq([
                       App.globalPut(Concat(Bytes("OriginalVoter_"), choice), Txn.sender()),
+                      App.globalPut(choice, choice_tally + balance.value()),
                   ])
                ),
                # If the choice either does not exist or does exist, then proceed
@@ -67,9 +68,13 @@ def approval_program():
                    is_winner(choice_tally, balance.value(), 50),
                    Seq([
                        App.globalPut(Bytes("Winner"), choice),
-                       App.globalPut(choice, choice_tally + balance.value()),
+                       #App.globalPut(choice, choice_tally + balance.value()),
                    ]),
-                   App.globalPut(choice, choice_tally + balance.value())
+                   If(original_voter_exists_check == Int(0),
+                      Seq([
+                        App.globalPut(choice, choice_tally + balance.value()),
+                      ])
+                   ),
                ),
                App.globalPut(Concat(Bytes("Vote_"), Txn.sender()), choice),
            ])
