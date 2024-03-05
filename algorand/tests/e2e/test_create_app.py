@@ -16,18 +16,21 @@ def test_vote(vote_app, app_args):
 
 def assert_final_state(global_state):
     expected_state = {
+        'Creator': 'a82fe67e59c7badbc9802c5b4c1c60cab7bd79147e4aa77b70c800c43ea057c8',
+        'TotalSupply': 1000000,
+        'Winner': 'choiceZ',
+        'OriginalVoter_choiceA': 'bb46ae84347088d6c61b2cf92848446942d9636163a9bb689933567fe47dcc80',
         '566f74655fbb46ae84347088d6c61b2cf92848446942d9636163a9bb689933567fe47dcc80': 'choiceA',
+        'choiceA': 50000,
         'choiceA_child': 'child-oid_a1',
         '566f74655f22da946c854e0dd9fd7b2df24b01f4ad09ae529753a9002f30b5f1415a8cea78': 'choiceB',
-        'choiceB_child': 'child-oid_b1',
-        'Winner': 'choiceZ',
-        'choiceZ_child': 'child_oid_z1',
-        'choiceA': 50000,
-        'Creator': 'a82fe67e59c7badbc9802c5b4c1c60cab7bd79147e4aa77b70c800c43ea057c8',
+        'OriginalVoter_choiceB': '22da946c854e0dd9fd7b2df24b01f4ad09ae529753a9002f30b5f1415a8cea78',
         'choiceB': 2500,
-        'TotalSupply': 1000000,
+        'choiceB_child': 'child-oid_b1',
+        'OriginalVoter_choiceZ': 'a82fe67e59c7badbc9802c5b4c1c60cab7bd79147e4aa77b70c800c43ea057c8',
         '566f74655fa82fe67e59c7badbc9802c5b4c1c60cab7bd79147e4aa77b70c800c43ea057c8': 'choiceZ',
-        'choiceZ': 947500
+        'choiceZ': 947500,
+        'choiceZ_child': 'child_oid_z1',
     }
     assert global_state == expected_state
 
