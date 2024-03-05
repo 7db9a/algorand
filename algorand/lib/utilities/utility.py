@@ -1,5 +1,6 @@
 import base64
-from algosdk import transaction, account, mnemonic
+import re
+from algosdk import encoding, transaction, account, mnemonic
 from algosdk.transaction import AssetTransferTxn, ApplicationCreateTxn, ApplicationOptInTxn, ApplicationCallTxn, ApplicationDeleteTxn, ApplicationCloseOutTxn, ApplicationClearStateTxn
 from algosdk.v2client import algod
 
@@ -129,6 +130,41 @@ def format_state(state):
 
         formatted[formatted_key] = formatted_value
 
+    return format_state_other_cases(formatted)
+
+def hex_to_algorand_address(hex_data):
+    try:
+        address_bytes = bytes.fromhex(hex_data)
+        address = encoding.encode_address(address_bytes)
+        return address
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+# Converts and formats the keys and values of an Algorand application's global state, decoding
+# hexadecimal strings to human-readable Algorand addresses and managing various data types.
+def format_state_other_cases(state):
+    formatted = {}
+    for key, value in state.items():
+        try:
+            # Check if key is a 64-character hexadecimal string and not prefixed
+            if re.match("^[0-9a-fA-F]{64}$", key):
+                address = hex_to_algorand_address(key)
+                formatted[address] = value
+            elif re.match("^[0-9a-fA-F]{64}$", value):
+                # Handle cases where the value is a 64-character hex string
+                formatted[key] = hex_to_algorand_address(value)
+            elif key.startswith("566f74655f"):  # Prefix like "Vote_"
+                # Strip the prefix and convert to Algorand address
+                hex_key = key[len("566f74655f"):]
+                if re.match("^[0-9a-fA-F]{64}$", hex_key):
+                    address = hex_to_algorand_address(hex_key)
+                    formatted[f"Vote_{address}"] = value
+            else:
+                # Keep original key-value pair if conversion is not applicable
+                formatted[key] = value
+        except Exception as e:
+            # Keep original key-value pair if conversion fails
+            formatted[key] = value
     return formatted
 
 # read user local state
