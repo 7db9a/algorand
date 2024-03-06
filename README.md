@@ -28,7 +28,10 @@ This guide provides detailed steps to set up and test a voting application on Al
      For each account (regardless if its 'online' or 'offline'), retrieve the mnemonic (replace `<account_address>`):
      ```
      docker-compose exec algorand goal account export -a <account_address> -d /algod/data/net1/Primary
+     docker-compose exec algorand goal account export -a <account_address> -d /algod/data/net1/Primary
      ```
+     You'll have to use the above one or the other, depending where the account is found (Primary or Node).
+
    Populate these mnemonics into `algorand/tests/e2e/test-config.json`.
 
    ```
