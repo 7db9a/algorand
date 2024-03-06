@@ -23,6 +23,24 @@ class TestVoteApp(unittest.TestCase):
         self.assertLess(app_id, 3000000)
 
     def test_vote(self):
+        """
+        Test the voting mechanism with multiple user participation and voting on different choices.
+
+        This test demonstrates and verifies the following:
+        1. Multiple users (in this case, user1 and user2) participating in the voting process.
+        2. Each user voting for a different choice. For instance:
+           - User1 votes for 'choiceA' with additional arguments.
+           - User2 votes for 'choiceB' with their respective arguments.
+           - The creator of the vote app also participates in voting, choosing 'choiceZ'.
+        3. After each vote, the method captures the final global state of the voting application.
+        4. The test then asserts whether the final global state matches the expected state, ensuring 
+           that votes are correctly tallied and reflected in the application's state.
+
+        This test is critical for ensuring the application correctly handles multiple votes from different 
+        users and accurately updates the global state according to these votes. It validates the application's 
+        ability to manage diverse inputs and maintain a consistent and accurate state, which is fundamental 
+        for the integrity of the voting process.
+        """
         user1_mnemonic = self.config['user1Info']['mnemonic']
         user2_mnemonic = self.config['user2Info']['mnemonic']
         app_id = self.vote_app_creator.create_app()[1]
@@ -40,6 +58,10 @@ class TestVoteApp(unittest.TestCase):
         self.assert_final_state(final_state)
 
     def assert_final_state(self, global_state):
+        """
+        Assert the final state of the application. This test compares the actual global state
+        with the expected state to ensure correctness of the voting process.
+        """
         expected_state = {
             'Creator': 'VAX6M7SZY65NXSMAFRNUYHDAZK3326IUPZFKO63QZAAMIPVAK7ECTS2F4M',
             'TotalSupply': 1000000,
