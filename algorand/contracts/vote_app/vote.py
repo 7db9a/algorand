@@ -16,17 +16,13 @@ def approval_program():
     choice = Txn.application_args[1]
     choice_tally = App.globalGet(choice)
 
-    get_vote_of_sender = App.globalGetEx(Int(0), Concat(Concat(Bytes("Vote_"), Txn.sender()), choice))
-    
+    get_vote_of_sender = App.globalGetEx(Int(0), Concat(Bytes("Vote_"), choice, Bytes("_"), Txn.sender()))
 
     on_closeout = Seq([
         get_vote_of_sender,
         If(
             get_vote_of_sender.hasValue(),
-            App.globalPut(
-                get_vote_of_sender.value(),
-                App.globalGet(get_vote_of_sender.value()) - Int(1),
-            ),
+            Return(Int(0)),
         ),
         Return(Int(1)),
     ])
@@ -61,7 +57,6 @@ def approval_program():
                   Seq([
                       # Only set <choice>_child if the choice doesn't exist or if it does exist
                       App.globalPut(Concat(choice, Bytes("_child")), Txn.application_args[2]),
-                      # Other operations...
                   ])
                ),
                If(
@@ -76,7 +71,7 @@ def approval_program():
                       ])
                    ),
                ),
-               App.globalPut(Concat(Bytes("Vote_"), Txn.sender()), choice),
+               App.globalPut(Concat(Bytes("Vote_"), choice, Bytes("_"), Txn.sender()), Int(1))
            ])
         ),
         Return(Int(1)),
@@ -94,16 +89,13 @@ def approval_program():
     return program
 
 def clear_state_program():
-    get_vote_of_sender = App.localGetEx(Int(0), App.id(), Bytes("voted"))
+    #get_vote_of_sender = App.globalGetEx(Int(0), Concat(Concat(Concat(Bytes("Vote_"), Txn.sender()), Bytes("_")), choice))
     program = Seq([
-        get_vote_of_sender,
-        If(
-            get_vote_of_sender.hasValue(),
-            App.globalPut(
-                get_vote_of_sender.value(),
-                App.globalGet(get_vote_of_sender.value()) - Int(1),
-            ),
-        ),
+    #    get_vote_of_sender,
+    #    If(
+    #        get_vote_of_sender.hasValue(),
+    #        Return(Int(0))
+    #    ),
         Return(Int(1)),
     ])
 

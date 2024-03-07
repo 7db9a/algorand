@@ -145,26 +145,44 @@ def hex_to_algorand_address(hex_data):
 def format_state_other_cases(state):
     formatted = {}
     for key, value in state.items():
-        try:
-            # Check if key is a 64-character hexadecimal string and not prefixed
-            if re.match("^[0-9a-fA-F]{64}$", key):
-                address = hex_to_algorand_address(key)
-                formatted[address] = value
-            elif re.match("^[0-9a-fA-F]{64}$", value):
-                # Handle cases where the value is a 64-character hex string
-                formatted[key] = hex_to_algorand_address(value)
-            elif key.startswith("566f74655f"):  # Prefix like "Vote_"
-                # Strip the prefix and convert to Algorand address
-                hex_key = key[len("566f74655f"):]
-                if re.match("^[0-9a-fA-F]{64}$", hex_key):
-                    address = hex_to_algorand_address(hex_key)
-                    formatted[f"Vote_{address}"] = value
+        if key.startswith("566f74655f"):  # Prefix like "Vote_"
+            print(f"Processing 'Vote_' prefixed key: {key}")
+            remaining_key = key[len("566f74655f"):]
+            address = remaining_key[-64:]
+            choice_hex = remaining_key[:-64]
+            try:
+                choice = bytes.fromhex(choice_hex).decode("utf-8")
+                choice = choice.rstrip("_")  # Remove any trailing underscore
+            except Exception as e:
+                print(f"Error decoding choice: {e}")
+                choice = choice_hex
+            print(f"Split into choice: {choice}, address: {address}")
+            if re.match("^[0-9a-fA-F]{64}$", address):
+                formatted_address = hex_to_algorand_address(address)
+                formatted_key = f"Vote_{choice}_{formatted_address}"
+                formatted[formatted_key] = value
+                print(f"Formatted key: {formatted_key}")
             else:
-                # Keep original key-value pair if conversion is not applicable
-                formatted[key] = value
-        except Exception as e:
-            # Keep original key-value pair if conversion fails
+                print(f"Address part does not match expected format")
+        elif isinstance(value, int):
             formatted[key] = value
+            print(f"Integer value for key {key}, keeping as is: {value}")
+        else:
+            try:
+                # Check if key is a 64-character hexadecimal string and not prefixed
+                if re.match("^[0-9a-fA-F]{64}$", key):
+                    address = hex_to_algorand_address(key)
+                    formatted[address] = value
+                elif re.match("^[0-9a-fA-F]{64}$", value):
+                    # Handle cases where the value is a 64-character hex string
+                    formatted[key] = hex_to_algorand_address(value)
+                else:
+                    # Keep original key-value pair if conversion is not applicable
+                    formatted[key] = value
+            except Exception as e:
+                # Keep original key-value pair if conversion fails
+                print(f"Exception occurred for key {key}: {e}")
+                formatted[key] = value
     return formatted
 
 # read user local state

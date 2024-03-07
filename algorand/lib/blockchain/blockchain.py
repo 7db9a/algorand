@@ -78,7 +78,7 @@ class Vote:
     def vote(self, app_args=None):
         sender = account.address_from_private_key(self.creator_private_key)
 
-        print(f"vote app id {self.app_id}")
+        #print(f"vote app id {self.app_id}")
 
         # call application without arguments
         call_app(self.client, self.user_private_key, self.app_id, app_args)
