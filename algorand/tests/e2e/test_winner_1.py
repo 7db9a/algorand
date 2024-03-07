@@ -3,6 +3,7 @@ import unittest
 from lib.blockchain import Vote
 
 class TestVoteApp(unittest.TestCase):
+    maxDiff = None
 
     def setUp(self):
         # Load the configuration file and initialize common resources
@@ -69,9 +70,9 @@ class TestVoteApp(unittest.TestCase):
             'OriginalVoter_choiceA': 'XNDK5BBUOCENNRQ3FT4SQSCENFBNSY3BMOU3W2EZGNLH7ZD5ZSANKIRJZM',
             'OriginalVoter_choiceB': 'ELNJI3EFJYG5T7L3FXZEWAPUVUE24UUXKOUQALZQWXYUCWUM5J4DHLNU2A',
             'OriginalVoter_choiceZ': 'VAX6M7SZY65NXSMAFRNUYHDAZK3326IUPZFKO63QZAAMIPVAK7ECTS2F4M',
-            'Vote_XNDK5BBUOCENNRQ3FT4SQSCENFBNSY3BMOU3W2EZGNLH7ZD5ZSANKIRJZM': 'choiceA',
-            'Vote_ELNJI3EFJYG5T7L3FXZEWAPUVUE24UUXKOUQALZQWXYUCWUM5J4DHLNU2A': 'choiceB',
-            'Vote_VAX6M7SZY65NXSMAFRNUYHDAZK3326IUPZFKO63QZAAMIPVAK7ECTS2F4M': 'choiceZ',
+            'Vote_choiceA_XNDK5BBUOCENNRQ3FT4SQSCENFBNSY3BMOU3W2EZGNLH7ZD5ZSANKIRJZM': 1,
+            'Vote_choiceB_ELNJI3EFJYG5T7L3FXZEWAPUVUE24UUXKOUQALZQWXYUCWUM5J4DHLNU2A': 1,
+            'Vote_choiceZ_VAX6M7SZY65NXSMAFRNUYHDAZK3326IUPZFKO63QZAAMIPVAK7ECTS2F4M': 1,
             'choiceA': 50000,
             'choiceB': 2500,
             'choiceZ': 947500,
@@ -79,6 +80,7 @@ class TestVoteApp(unittest.TestCase):
             'choiceB_child': 'child-oid_b1',
             'choiceZ_child': 'child_oid_z1'
         }
+
         self.assertDictEqual(global_state, expected_state)
 
 if __name__ == "__main__":
