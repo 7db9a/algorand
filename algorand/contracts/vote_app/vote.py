@@ -42,14 +42,12 @@ def approval_program():
         If(check_winner_exists() == Int(0), Return(Int(0))),
         get_vote_of_sender,
         balance,
-        If(get_vote_of_sender.hasValue(), Return(Int(0))),
         If(balance.hasValue(),
            Seq([
                # Record first (original) voter and track.
                If(choice_existence == Int(0),
                   Seq([
                       App.globalPut(Concat(Bytes("OriginalVoter_"), choice), Txn.sender()),
-                      App.globalPut(choice, choice_tally + balance.value()),
                   ])
                ),
                # If the choice either does not exist or does exist, then proceed
@@ -59,18 +57,17 @@ def approval_program():
                       App.globalPut(Concat(choice, Bytes("_child")), Txn.application_args[2]),
                   ])
                ),
+               # Tally is updated only if this is the first time the sender is voting for this choice
+               If(
+                   Not(get_vote_of_sender.hasValue()),
+                   App.globalPut(choice, choice_tally + balance.value())
+               ),
+               # Check for winner after updating tally
                If(
                    is_winner(choice_tally, balance.value(), 50),
-                   Seq([
-                       App.globalPut(Bytes("Winner"), choice),
-                       #App.globalPut(choice, choice_tally + balance.value()),
-                   ]),
-                   If(original_voter_exists_check == Int(0),
-                      Seq([
-                        App.globalPut(choice, choice_tally + balance.value()),
-                      ])
-                   ),
+                   App.globalPut(Bytes("Winner"), choice),
                ),
+               # Record the vote regardless of whether it's a repeat vote or not
                App.globalPut(Concat(Bytes("Vote_"), choice, Bytes("_"), Txn.sender()), Int(1))
            ])
         ),
