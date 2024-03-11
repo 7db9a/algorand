@@ -50,7 +50,7 @@ def approval_program():
                       App.globalPut(Concat(Bytes("OriginalVoter_"), choice), Txn.sender()),
                   ])
                ),
-               # If the choice either does not exist or does exist, then proceed
+               # If the choice either does not exist or the voter is the original, then proceed
                If(Or(choice_existence == Int(0), original_voter_exists_check == Int(1)),
                   Seq([
                       # Only set <choice>_child if the choice doesn't exist or if it does exist
