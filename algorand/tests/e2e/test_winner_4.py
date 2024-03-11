@@ -45,9 +45,9 @@ class TestVoteApp(unittest.TestCase):
         This test involves three voting transactions by different users
         and verifies the final state of the voting application.
         """
-        self.vote_app_user1.vote([b"vote", b"choiceA", b"child-oid_a1"])
-        self.vote_app_user2.vote([b"vote", b"choiceA", b"child-oid_a1"])
-        final_state = self.vote_app_creator.vote([b"vote", b"choiceA", b"child_oid_a1"])
+        self.vote_app_user1.vote([b"vote", b"choiceA", b"child-oid-a1"])
+        self.vote_app_user2.vote([b"vote", b"choiceA", b"child-oid-a1"])
+        final_state = self.vote_app_creator.vote([b"vote", b"choiceA", b"child-oid-a1"])
 
         expected_state = {
             'Creator': 'VAX6M7SZY65NXSMAFRNUYHDAZK3326IUPZFKO63QZAAMIPVAK7ECTS2F4M',
@@ -57,7 +57,7 @@ class TestVoteApp(unittest.TestCase):
             'Vote_choiceA_XNDK5BBUOCENNRQ3FT4SQSCENFBNSY3BMOU3W2EZGNLH7ZD5ZSANKIRJZM': 1,
             'Vote_choiceA_ELNJI3EFJYG5T7L3FXZEWAPUVUE24UUXKOUQALZQWXYUCWUM5J4DHLNU2A': 1,
             'Vote_choiceA_VAX6M7SZY65NXSMAFRNUYHDAZK3326IUPZFKO63QZAAMIPVAK7ECTS2F4M': 1,
-            'choiceA': 1000001,
+            'choiceA': 1000000,
             'choiceA_child': 'child-oid_a1',
         }
 
