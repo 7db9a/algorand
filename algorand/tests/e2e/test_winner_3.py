@@ -1,8 +1,10 @@
 import json
 import unittest
 from lib.blockchain import Vote
+# Voter 1 is able to update the ref on its choice A.
 
-# Voter 2 increments choice after Voter 1 initiates.
+# Voter 1 and 2 vote on seperate choices.
+# Creator votes on choice Z an wins.
 
 class TestVoteApp(unittest.TestCase):
     maxDiff = None
@@ -47,7 +49,7 @@ class TestVoteApp(unittest.TestCase):
         """
         self.vote_app_user1.vote([b"vote", b"choiceA", b"child-oid_a1"])
         self.vote_app_user2.vote([b"vote", b"choiceB", b"child-oid_b1"])
-        self.vote_app_user2.vote([b"vote", b"choiceA", b"child-oid_b1"])
+        self.vote_app_user1.vote([b"vote", b"choiceA", b"child-oid_b1"])
         final_state = self.vote_app_creator.vote([b"vote", b"choiceZ", b"child_oid_z1"])
 
         expected_state = {

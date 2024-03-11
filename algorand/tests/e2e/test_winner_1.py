@@ -2,6 +2,8 @@ import json
 import unittest
 from lib.blockchain import Vote
 
+# Voter 1 and 2 vote on seperate choices. Creator votes on choice Z and wins.
+
 class TestVoteApp(unittest.TestCase):
     maxDiff = None
 
