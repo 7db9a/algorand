@@ -58,7 +58,7 @@ class TestVoteApp(unittest.TestCase):
             'Vote_choiceA_ELNJI3EFJYG5T7L3FXZEWAPUVUE24UUXKOUQALZQWXYUCWUM5J4DHLNU2A': 1,
             'Vote_choiceA_VAX6M7SZY65NXSMAFRNUYHDAZK3326IUPZFKO63QZAAMIPVAK7ECTS2F4M': 1,
             'choiceA': 1000000,
-            'choiceA_child': 'child-oid_a1',
+            'choiceA_child': 'child-oid-a1',
         }
 
         self.assertDictEqual(final_state, expected_state)
