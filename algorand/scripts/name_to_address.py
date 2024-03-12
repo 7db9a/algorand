@@ -35,6 +35,7 @@ def main():
     address = get_account_address(name, datadir)
 
     if address:
+        print(f"Account {address} with name '{name}' found.")
         # Run the specified command with the account address
         subprocess.run(command + ["-a", address, "-d", datadir] + sys.argv[5:])
     else:
