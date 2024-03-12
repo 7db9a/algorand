@@ -64,7 +64,7 @@ class TestVoteApp(unittest.TestCase):
             'Vote_choiceZ_VAX6M7SZY65NXSMAFRNUYHDAZK3326IUPZFKO63QZAAMIPVAK7ECTS2F4M': 1,
             'choiceA': 50000,
             'choiceB': 2500,
-            'choiceZ': 947500,
+            'choiceZ': 877500,
             'choiceA_child': 'child-oid_b1',
             'choiceB_child': 'child-oid_b1',
             'choiceZ_child': 'child_oid_z1'

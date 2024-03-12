@@ -16,6 +16,7 @@ class TestVoteApp(unittest.TestCase):
         creator_mnemonic = config['creatorInfo']['mnemonic']
         user1_mnemonic = config['user1Info']['mnemonic']
         user2_mnemonic = config['user2Info']['mnemonic']
+        user3_mnemonic = config['user3Info']['mnemonic']
         algod_address = config['algodAddress']
         algod_token = config['algodToken']
         asset_id = config['assetId']
@@ -23,13 +24,16 @@ class TestVoteApp(unittest.TestCase):
         cls.vote_app_creator = Vote(algod_address, algod_token, asset_id, creator_mnemonic, creator_mnemonic)
         cls.vote_app_user1 = Vote(algod_address, algod_token, asset_id, user1_mnemonic, user1_mnemonic)
         cls.vote_app_user2 = Vote(algod_address, algod_token, asset_id, user2_mnemonic, user2_mnemonic)
+        cls.vote_app_user3 = Vote(algod_address, algod_token, asset_id, user3_mnemonic, user3_mnemonic)
 
         app_id = cls.create_app(cls.vote_app_creator)
         cls.vote_app_user1.app_id = app_id
         cls.vote_app_user2.app_id = app_id
+        cls.vote_app_user3.app_id = app_id
 
         cls.vote_app_user1.optin()
         cls.vote_app_user2.optin()
+        cls.vote_app_user3.optin()
 
     @staticmethod
     def create_app(vote_app):
@@ -47,6 +51,7 @@ class TestVoteApp(unittest.TestCase):
         """
         self.vote_app_user1.vote([b"vote", b"choiceA", b"child-oid-a1"])
         self.vote_app_user2.vote([b"vote", b"choiceA", b"child-oid-a1"])
+        self.vote_app_user3.vote([b"vote", b"choiceA", b"child-oid-a1"])
         final_state = self.vote_app_creator.vote([b"vote", b"choiceA", b"child-oid-a1"])
 
         expected_state = {
@@ -56,6 +61,7 @@ class TestVoteApp(unittest.TestCase):
             'OriginalVoter_choiceA': 'XNDK5BBUOCENNRQ3FT4SQSCENFBNSY3BMOU3W2EZGNLH7ZD5ZSANKIRJZM',
             'Vote_choiceA_XNDK5BBUOCENNRQ3FT4SQSCENFBNSY3BMOU3W2EZGNLH7ZD5ZSANKIRJZM': 1,
             'Vote_choiceA_ELNJI3EFJYG5T7L3FXZEWAPUVUE24UUXKOUQALZQWXYUCWUM5J4DHLNU2A': 1,
+            'Vote_choiceA_CSNFGTZI47Q52ZUI6SHTTCYO2YX7VHWUSYRXJYSPIHXST5E5KLZQNNHVLY': 1,
             'Vote_choiceA_VAX6M7SZY65NXSMAFRNUYHDAZK3326IUPZFKO63QZAAMIPVAK7ECTS2F4M': 1,
             'choiceA': 1000000,
             'choiceA_child': 'child-oid-a1',

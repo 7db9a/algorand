@@ -46,13 +46,16 @@ class TestVoteApp(unittest.TestCase):
         """
         user1_mnemonic = self.config['user1Info']['mnemonic']
         user2_mnemonic = self.config['user2Info']['mnemonic']
+        user3_mnemonic = self.config['user3Info']['mnemonic']
         app_id = self.vote_app_creator.create_app()[1]
 
         vote_app_user1 = Vote(self.config['algodAddress'], self.config['algodToken'], self.config['assetId'], user1_mnemonic, user1_mnemonic, app_id)
         vote_app_user2 = Vote(self.config['algodAddress'], self.config['algodToken'], self.config['assetId'], user2_mnemonic, user2_mnemonic, app_id)
+        vote_app_user3 = Vote(self.config['algodAddress'], self.config['algodToken'], self.config['assetId'], user3_mnemonic, user3_mnemonic, app_id)
 
         vote_app_user1.optin()
         vote_app_user2.optin()
+        vote_app_user3.optin()
 
         vote_app_user1.vote([b"vote", b"choiceA", b"child-oid_a1"])
         vote_app_user2.vote([b"vote", b"choiceB", b"child-oid_b1"])
@@ -77,7 +80,7 @@ class TestVoteApp(unittest.TestCase):
             'Vote_choiceZ_VAX6M7SZY65NXSMAFRNUYHDAZK3326IUPZFKO63QZAAMIPVAK7ECTS2F4M': 1,
             'choiceA': 50000,
             'choiceB': 2500,
-            'choiceZ': 947500,
+            'choiceZ': 877500,
             'choiceA_child': 'child-oid_a1',
             'choiceB_child': 'child-oid_b1',
             'choiceZ_child': 'child_oid_z1'
