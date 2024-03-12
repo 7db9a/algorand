@@ -64,8 +64,23 @@ def approval_program():
                ),
                # Check for winner after updating tally
                If(
-                   is_winner(choice_tally, balance.value(), 50),
-                   App.globalPut(Bytes("Winner"), choice),
+                   is_milestone(choice_tally, balance.value(), 50),
+                   Seq([
+                       App.globalPut(Bytes("Winner"), choice),
+                       # If a winner is declared, delete the "Exclusive" key if it exists
+                       (exclusive_value := App.globalGetEx(Int(0), Bytes("Exclusive"))),
+                       If(exclusive_value.hasValue(),
+                          App.globalDel(Bytes("Exclusive"))
+                       )
+                   ]),
+               ),
+               # Check for exclusive vote only if a winner hasn't been declared
+               If(
+                   And(
+                       is_milestone(choice_tally, balance.value(), 10),
+                       Not(compare_global_value(Bytes("Winner"), choice))  # Compare the "Winner" value with the current choice
+                   ),
+                   App.globalPut(Bytes("Exclusive"), choice),
                ),
                # Record the vote regardless of whether it's a repeat vote or not
                App.globalPut(Concat(Bytes("Vote_"), choice, Bytes("_"), Txn.sender()), Int(1))
@@ -111,7 +126,7 @@ def check_asa_holder(min_balance: int = 1):
         Assert(balance.value() >= Int(min_balance))
     ])
 
-def is_winner(tally, balance, winning_percentage):
+def is_milestone(tally, balance, winning_percentage):
     totalSupply = App.globalGet(Bytes("TotalSupply"))
     winningThreshold = (totalSupply * Int(winning_percentage)) / Int(100)
     return tally + balance > winningThreshold
