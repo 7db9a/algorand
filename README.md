@@ -65,6 +65,36 @@ sleep 1
 docker-compose exec -it algorand ./tests/run_e2e.sh
 ```
 
+## Account Address Lookup Script
+
+The `name_to_address.py` script is a utility that allows you to retrieve the account address associated with a given account name and execute `goal` commands using that address.
+
+### Usage
+
+To use the `name_to_address.py` script, run the following command:
+
+```
+docker-compose exec -it algorand \
+./name_to_address.py "<command>" <name> -d <datadir>
+```
+
+- `<command>`: The `goal` command you want to run (e.g., `"goal account balance"`).
+- `<name>`: The name of the account you want to retrieve the address for.
+- `-d <datadir>`: The data directory for the node (e.g., `/algod/data/net1/Node`).
+
+### Example
+
+To check the balance of an account with the name "user3" using the `name_to_address.py` script, run the following command:
+
+```
+docker-compose exec -it algorand \
+./name_to_address.py "goal account balance" user3 -d /algod/data/net1/Node
+```
+
+The script will retrieve the account address associated with the name "user3" and execute the `goal account balance` command with the retrieved address and the specified data directory.
+
+Note: Make sure to have the `name_to_address.py` script file in the same directory where you are running the command, or provide the full path to the script file if it is located elsewhere.
+
 ## Key Developments and Features
 - **Automatic ASA Opt-in**
 - **Vote Threshold Function**
