@@ -11,3 +11,4 @@ python -m tests.e2e.test_winner_1
 python -m tests.e2e.test_winner_2
 python -m tests.e2e.test_winner_3
 python -m tests.e2e.test_winner_4
+python -m tests.e2e.test_winner_5
