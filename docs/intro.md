@@ -63,9 +63,9 @@ goal account export -a <account_address> -d /algod/data/net1/<Primary or Node>
 **Identify Sender Account**:
 Choose an account with a positive balance from the list.
 
-**Send Transaction**:
+**Send MicroAlgos**:
 ``
-goal clerk send -a 0 -f [SenderAccount] -t [ContractAddress] -d /algod/data/net1/<Primary or Node>
+goal clerk send -a <MicroAlgos> -f [SenderAccount] -t [ContractAddress] -d /algod/data/net1/<Primary or Node>
 ``
 Replace `[SenderAccount]` with the sender account address and `[ContractAddress]` with the address of the compiled smart contract.
 
