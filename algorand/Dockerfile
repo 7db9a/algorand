@@ -23,6 +23,8 @@ COPY algorand/contracts/ /algod/contracts/
 COPY algorand/tests/ /algod/tests/
 COPY algorand/experiments/ /algod/experiments/
 COPY algorand/examples/ /algod/examples/
+COPY algorand/algorand-accounts/ /algod/algorand-accounts/
+COPY algorand/scripts/name_to_address.py /algod/name_to_address.py
 
 # Expose necessary ports
 EXPOSE 8080 7833
