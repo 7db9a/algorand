@@ -44,6 +44,16 @@ def approval_program():
         balance,
         If(balance.hasValue(),
             Seq([
+                # Check if a winner exists and the user is trying to vote on a different choice
+                (winner := App.globalGetEx(Int(0), Bytes("Winner"))),
+                If(winner.hasValue(),
+                    If(winner.value() != choice,
+                        Seq([
+                            App.globalPut(Bytes("LastWinner"), winner.value()),
+                            App.globalDel(Bytes("Winner"))
+                        ])
+                    )
+                ),
                 # Record first (original) voter and track.
                 If(choice_existence == Int(0),
                     Seq([
