@@ -140,7 +140,8 @@ def approval_program():
         [Txn.on_completion() == OnComplete.UpdateApplication, Return(is_creator)],
         [Txn.on_completion() == OnComplete.CloseOut, on_closeout],
         [Txn.on_completion() == OnComplete.OptIn, Return(Int(1))],  # Handle the OptIn logic
-        [Txn.application_args[0] == Bytes("vote"), on_vote]
+        [Txn.application_args[0] == Bytes("vote"), on_vote],
+        [Txn.application_args[0] == Bytes("delete_key"), delete_key_branch()]
     )
 
     return program
@@ -218,6 +219,17 @@ def check_winner_exists():
             Int(0),  # A winner is declared, return 0 (False)
             Int(1)   # No winner yet, return 1 (True)
         )
+    ])
+
+def delete_key_branch():
+    # Ensure that there are enough arguments and the sender is the creator
+    is_creator = Txn.sender() == App.globalGet(Bytes("Creator"))
+    key_to_delete = Txn.application_args[1]
+    return Seq([
+        Assert(Txn.application_args.length() == Int(2)),
+        Assert(is_creator),
+        App.globalDel(key_to_delete),
+        Return(Int(1))  # Ensure successful completion
     ])
 
 if __name__ == "__main__":
