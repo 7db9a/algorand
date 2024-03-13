@@ -98,3 +98,22 @@ class Vote:
 
 
         return global_state
+
+    def delete_key(self, key_args):
+        if not self.app_id:
+            raise Exception("Application ID not set")
+    
+        # Assuming key_args is a list where the first element is the action and the second is the key name
+        action = key_args[0]
+        key_name = key_args[1]
+    
+        # Prepare the arguments for the application call
+        app_args = [action, key_name]
+    
+        # Use call_app function to send the transaction
+        call_app(self.client, self.creator_private_key, self.app_id, app_args)
+    
+        # Optionally, you can read and return the global state to verify the deletion
+        global_state = read_global_state(self.client, self.app_id)
+        return global_state
+
