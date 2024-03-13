@@ -1,8 +1,9 @@
 import json
 import unittest
+from algosdk.v2client import algod
 from lib.blockchain import Vote
 
-# don't trigger exclusive vote
+# Trigger exclusive vote, disallow voting on other choices.
 
 class TestVoteApp(unittest.TestCase):
     maxDiff = None
@@ -49,20 +50,46 @@ class TestVoteApp(unittest.TestCase):
         This test involves three voting transactions by different users
         and verifies the final state of the voting application.
         """
-        #self.vote_app_user1.vote([b"vote", b"choiceA", b"child-oid_a1"])
-        self.vote_app_user2.vote([b"vote", b"choiceA", b"child-oid_a1"])
-        final_state = self.vote_app_user3.vote([b"vote", b"choiceA", b"child-oid_a1"])
+        self.vote_app_user1.vote([b"vote", b"choiceA", b"child-oid_a1"])
+        intermediate_state = self.vote_app_user3.vote([b"vote", b"choiceA", b"child-oid_a1"]) # Hits Exclusive threshold
 
-        expected_state = {
+        try:
+            self.vote_app_user2.vote([b"vote", b"choiceB", b"child-oid_b1"]) # Shouldn't work, as it's other is Exclusive
+        except algod.error.AlgodHTTPError as e:
+            error_message = str(e)
+            if "logic eval error" in error_message:
+                print(f"Transaction failed with logic eval error:")
+                print(f"  Error message: {error_message}")
+                print(f"  Error details: {e.args}")
+            else:
+                print(f"Error retrieving transaction details: {error_message}")
+
+        final_state = self.vote_app_user2.vote([b"vote", b"choiceA", b"child-oid_a1"]) # Should work, as it's the Exclusive choice.
+
+        expected_intermediate_state = {
+            'Exclusive': 'choiceA',
             'Creator': 'VAX6M7SZY65NXSMAFRNUYHDAZK3326IUPZFKO63QZAAMIPVAK7ECTS2F4M',
             'TotalSupply': 1000000,
-            'OriginalVoter_choiceA': 'ELNJI3EFJYG5T7L3FXZEWAPUVUE24UUXKOUQALZQWXYUCWUM5J4DHLNU2A',
-            'Vote_choiceA_ELNJI3EFJYG5T7L3FXZEWAPUVUE24UUXKOUQALZQWXYUCWUM5J4DHLNU2A': 1,
+            'OriginalVoter_choiceA': 'XNDK5BBUOCENNRQ3FT4SQSCENFBNSY3BMOU3W2EZGNLH7ZD5ZSANKIRJZM',
             'Vote_choiceA_CSNFGTZI47Q52ZUI6SHTTCYO2YX7VHWUSYRXJYSPIHXST5E5KLZQNNHVLY': 1,
-            'choiceA': 72500,
+            'Vote_choiceA_XNDK5BBUOCENNRQ3FT4SQSCENFBNSY3BMOU3W2EZGNLH7ZD5ZSANKIRJZM': 1,
+            'choiceA': 120000,
             'choiceA_child': 'child-oid_a1',
         }
 
+        expected_state = {
+            'Exclusive': 'choiceA',
+            'Creator': 'VAX6M7SZY65NXSMAFRNUYHDAZK3326IUPZFKO63QZAAMIPVAK7ECTS2F4M',
+            'TotalSupply': 1000000,
+            'OriginalVoter_choiceA': 'XNDK5BBUOCENNRQ3FT4SQSCENFBNSY3BMOU3W2EZGNLH7ZD5ZSANKIRJZM',
+            'Vote_choiceA_CSNFGTZI47Q52ZUI6SHTTCYO2YX7VHWUSYRXJYSPIHXST5E5KLZQNNHVLY': 1,
+            'Vote_choiceA_ELNJI3EFJYG5T7L3FXZEWAPUVUE24UUXKOUQALZQWXYUCWUM5J4DHLNU2A': 1,
+            'Vote_choiceA_XNDK5BBUOCENNRQ3FT4SQSCENFBNSY3BMOU3W2EZGNLH7ZD5ZSANKIRJZM': 1,
+            'choiceA': 122500,
+            'choiceA_child': 'child-oid_a1',
+        }
+
+        self.assertDictEqual(intermediate_state, expected_intermediate_state)
         self.assertDictEqual(final_state, expected_state)
 
 if __name__ == "__main__":

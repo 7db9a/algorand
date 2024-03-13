@@ -43,48 +43,83 @@ def approval_program():
         get_vote_of_sender,
         balance,
         If(balance.hasValue(),
-           Seq([
-               # Record first (original) voter and track.
-               If(choice_existence == Int(0),
-                  Seq([
-                      App.globalPut(Concat(Bytes("OriginalVoter_"), choice), Txn.sender()),
-                  ])
-               ),
-               # If the choice either does not exist or the voter is the original, then proceed
-               If(Or(choice_existence == Int(0), original_voter_exists_check == Int(1)),
-                  Seq([
-                      # Only set <choice>_child if the choice doesn't exist or if it does exist
-                      App.globalPut(Concat(choice, Bytes("_child")), Txn.application_args[2]),
-                  ])
-               ),
-               # Tally is updated only if this is the first time the sender is voting for this choice
-               If(
-                   Not(get_vote_of_sender.hasValue()),
-                   App.globalPut(choice, choice_tally + balance.value())
-               ),
-               # Check for winner after updating tally
-               If(
-                   is_milestone(choice_tally, balance.value(), 50),
-                   Seq([
-                       App.globalPut(Bytes("Winner"), choice),
-                       # If a winner is declared, delete the "Exclusive" key if it exists
-                       (exclusive_value := App.globalGetEx(Int(0), Bytes("Exclusive"))),
-                       If(exclusive_value.hasValue(),
-                          App.globalDel(Bytes("Exclusive"))
-                       )
-                   ]),
-               ),
-               # Check for exclusive vote only if a winner hasn't been declared
-               If(
-                   And(
-                       is_milestone(choice_tally, balance.value(), 10),
-                       Not(compare_global_value(Bytes("Winner"), choice))  # Compare the "Winner" value with the current choice
-                   ),
-                   App.globalPut(Bytes("Exclusive"), choice),
-               ),
-               # Record the vote regardless of whether it's a repeat vote or not
-               App.globalPut(Concat(Bytes("Vote_"), choice, Bytes("_"), Txn.sender()), Int(1))
-           ])
+            Seq([
+                # Record first (original) voter and track.
+                If(choice_existence == Int(0),
+                    Seq([
+                        App.globalPut(Concat(Bytes("OriginalVoter_"), choice), Txn.sender()),
+                    ])
+                ),
+                # If the choice either does not exist or the voter is the original, then proceed
+                If(Or(choice_existence == Int(0), original_voter_exists_check == Int(1)),
+                    Seq([
+                        # Only set <choice>_child if the choice doesn't exist or if it does exist
+                        App.globalPut(Concat(choice, Bytes("_child")), Txn.application_args[2]),
+                    ])
+                ),
+                # Check if a choice is already marked as "Exclusive"
+                (exclusive_value := App.globalGetEx(Int(0), Bytes("Exclusive"))),
+                If(exclusive_value.hasValue(),
+                    Seq([
+                        # If a choice is already marked as "Exclusive", check if the current choice matches the "Exclusive" choice
+                        If(exclusive_value.value() == choice,
+                            Seq([
+                                # If the current choice matches the "Exclusive" choice, allow the vote
+                                # Tally is updated only if this is the first time the sender is voting for this choice
+                                If(
+                                    Not(get_vote_of_sender.hasValue()),
+                                    App.globalPut(choice, choice_tally + balance.value())
+                                ),
+                                # Check for winner after updating tally
+                                If(
+                                    is_milestone(choice_tally, 50),
+                                    Seq([
+                                        App.globalPut(Bytes("Winner"), choice),
+                                        # If a winner is declared, delete the "Exclusive" key
+                                        App.globalDel(Bytes("Exclusive"))
+                                    ]),
+                                ),
+                                # Record the vote regardless of whether it's a repeat vote or not
+                                App.globalPut(Concat(Bytes("Vote_"), choice, Bytes("_"), Txn.sender()), Int(1))
+                            ]),
+                            # If the current choice doesn't match the "Exclusive" choice, reject the vote
+                            Seq([
+                                Assert(Int(0), comment="The chosen option is not the exclusive choice."),
+                                Err()
+                            ])
+                        )
+                    ]),
+                    # If no choice is marked as "Exclusive", proceed with the regular voting process
+                    Seq([
+                        # Tally is updated only if this is the first time the sender is voting for this choice
+                        If(
+                            Not(get_vote_of_sender.hasValue()),
+                            App.globalPut(choice, choice_tally + balance.value())
+                        ),
+                        # Check for winner after updating tally
+                        If(
+                            is_milestone(choice_tally, 50),
+                            Seq([
+                                App.globalPut(Bytes("Winner"), choice),
+                                # If a winner is declared, delete the "Exclusive" key if it exists
+                                If(exclusive_value.hasValue(),
+                                    App.globalDel(Bytes("Exclusive"))
+                                )
+                            ]),
+                        ),
+                        # Check for exclusive vote only if a winner hasn't been declared
+                        If(
+                            And(
+                                is_milestone(choice_tally, 10),
+                                Not(compare_global_value(Bytes("Winner"), choice)) # Compare the "Winner" value with the current choice
+                            ),
+                            App.globalPut(Bytes("Exclusive"), choice),
+                        ),
+                        # Record the vote regardless of whether it's a repeat vote or not
+                        App.globalPut(Concat(Bytes("Vote_"), choice, Bytes("_"), Txn.sender()), Int(1))
+                    ])
+                )
+            ])
         ),
         Return(Int(1)),
     ])
@@ -126,12 +161,10 @@ def check_asa_holder(min_balance: int = 1):
         Assert(balance.value() >= Int(min_balance))
     ])
 
-def is_milestone(tally, balance, winning_percentage):
+def is_milestone(tally, winning_percentage):
     totalSupply = App.globalGet(Bytes("TotalSupply"))
     winningThreshold = (totalSupply * Int(winning_percentage)) / Int(100)
-    return tally + balance > winningThreshold
-
-
+    return tally >= winningThreshold
 
 def choice_existence_check(choice):
     result = App.globalGetEx(Int(0), choice)
