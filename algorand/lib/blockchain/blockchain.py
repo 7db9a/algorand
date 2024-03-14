@@ -1,7 +1,8 @@
 import base64
 from algosdk import transaction, account, mnemonic
+from algosdk.encoding import encode_address, decode_address
 from algosdk.v2client import algod
-from algosdk.transaction import AssetTransferTxn, StateSchema
+from algosdk.transaction import AssetTransferTxn, ApplicationCallTxn, StateSchema
 #from pyteal import compileTeal, Mode
 
 from lib.utilities.utility import (
@@ -99,6 +100,44 @@ class Vote:
 
         return global_state
 
+    def delete_global_state_key_human(self, choice, sender):
+        # Get the sender's account address
+        sender_address = account.address_from_private_key(self.creator_private_key)
+    
+        # Get the suggested parameters for the transaction
+        params = self.client.suggested_params()
+    
+        # Decode the sender's Algorand address to bytes
+        sender_bytes = decode_address(sender)
+    
+        # Construct the key using the decoded sender bytes
+        key = f"Vote_{choice}_".encode() + sender_bytes
+    
+        # Create the application call transaction
+        app_args = [
+            "delete_key".encode("utf-8"),
+            key
+        ]
+        call_txn = ApplicationCallTxn(
+            sender=sender_address,
+            sp=params,
+            index=self.app_id,
+            app_args=app_args,
+            on_complete=transaction.OnComplete.NoOpOC
+        )
+    
+        # Sign the transaction with the sender's private key
+        signed_txn = call_txn.sign(self.creator_private_key)
+    
+        # Send the transaction to the network
+        txid = self.client.send_transaction(signed_txn)
+    
+        # Wait for the transaction to be confirmed
+        confirmed_txn = wait_for_confirmation(self.client, txid)
+    
+        print(f"Deleted key '{key}' from the global state of app with ID: {self.app_id}")
+        print(f"Transaction ID: {txid}")
+ 
     def delete_key(self, key_args):
         if not self.app_id:
             raise Exception("Application ID not set")

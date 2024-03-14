@@ -1,4 +1,6 @@
 import json
+import base64
+from algosdk.encoding import decode_address
 import unittest
 from lib.blockchain import Vote
 
@@ -51,7 +53,14 @@ class TestVoteApp(unittest.TestCase):
         self.vote_app_user2.vote([b"vote", b"choiceA", b"child-oid_b1"])
         winner_state = self.vote_app_creator.vote([b"vote", b"choiceZ", b"child_oid_z1"])
 
-        # After the voting sequence
+        choice = "choiceA"
+        sender = "XNDK5BBUOCENNRQ3FT4SQSCENFBNSY3BMOU3W2EZGNLH7ZD5ZSANKIRJZM"
+        self.vote_app_creator.delete_global_state_key_human(choice, sender)
+
+        choice = "choiceA"
+        sender = "ELNJI3EFJYG5T7L3FXZEWAPUVUE24UUXKOUQALZQWXYUCWUM5J4DHLNU2A"
+        self.vote_app_creator.delete_global_state_key_human(choice, sender)
+        
         final_state = self.vote_app_creator.delete_key([b"delete_key", b"Winner"])
 
         expected_winner_state = {
