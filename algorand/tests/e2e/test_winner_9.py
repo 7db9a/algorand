@@ -16,6 +16,7 @@ class TestVoteApp(unittest.TestCase):
         creator_mnemonic = config['creatorInfo']['mnemonic']
         user1_mnemonic = config['user1Info']['mnemonic']
         user2_mnemonic = config['user2Info']['mnemonic']
+        user3_mnemonic = config['user3Info']['mnemonic']  # Add user3 mnemonic
         algod_address = config['algodAddress']
         algod_token = config['algodToken']
         asset_id = config['assetId']
@@ -23,13 +24,16 @@ class TestVoteApp(unittest.TestCase):
         cls.vote_app_creator = Vote(algod_address, algod_token, asset_id, creator_mnemonic, creator_mnemonic)
         cls.vote_app_user1 = Vote(algod_address, algod_token, asset_id, user1_mnemonic, user1_mnemonic)
         cls.vote_app_user2 = Vote(algod_address, algod_token, asset_id, user2_mnemonic, user2_mnemonic)
+        cls.vote_app_user3 = Vote(algod_address, algod_token, asset_id, user3_mnemonic, user3_mnemonic)  # Add user3 instance
 
         app_id = cls.create_app(cls.vote_app_creator)
         cls.vote_app_user1.app_id = app_id
         cls.vote_app_user2.app_id = app_id
+        cls.vote_app_user3.app_id = app_id  # Set app_id for user3
 
         cls.vote_app_user1.optin()
         cls.vote_app_user2.optin()
+        cls.vote_app_user3.optin()  # User3 opt-in
 
     @staticmethod
     def create_app(vote_app):
@@ -94,8 +98,7 @@ class TestVoteApp(unittest.TestCase):
 
         self.assertDictEqual(intermediate_state, expected_intermediate_state)
 
-        # User1 votes on 'choiceB', but doesn't change successfully change its 'ref' as
-        # the user isn't the original voter.
+        # User1 votes on 'choiceB', but unable to update ref as User2 is the original voter.
         self.vote_app_user1.vote([b"vote", b"choiceB", b"child-oid_a1"])
 
         # Assert the intermediate state before the creator votes on 'choiceB'
@@ -111,19 +114,42 @@ class TestVoteApp(unittest.TestCase):
             'Vote_choiceB_XNDK5BBUOCENNRQ3FT4SQSCENFBNSY3BMOU3W2EZGNLH7ZD5ZSANKIRJZM': 1,
             'choiceA': 52500,
             'choiceB': 52500,
-            'Exclusive': 'choiceB',
             'choiceA_child': 'child-oid_a1',
             'choiceB_child': 'child-oid_b1'
         }
         self.assertDictEqual(intermediate_state_before_creator_vote, expected_intermediate_state_before_creator_vote)
 
-        # Creator votes on 'choiceB'
+        # User3 votes on 'choiceB'
+        self.vote_app_user3.vote([b"vote", b"choiceB", b"child-oid_b1"])
+
+        # Assert the intermediate state after user3 votes on 'choiceB'
+        intermediate_state_after_user3_vote = self.vote_app_creator.read_global_state()
+        expected_intermediate_state_after_user3_vote = {
+            'Creator': 'VAX6M7SZY65NXSMAFRNUYHDAZK3326IUPZFKO63QZAAMIPVAK7ECTS2F4M',
+            'TotalSupply': 1000000,
+            'Exclusive': 'choiceB',
+            'OriginalVoter_choiceA': 'XNDK5BBUOCENNRQ3FT4SQSCENFBNSY3BMOU3W2EZGNLH7ZD5ZSANKIRJZM',
+            'OriginalVoter_choiceB': 'ELNJI3EFJYG5T7L3FXZEWAPUVUE24UUXKOUQALZQWXYUCWUM5J4DHLNU2A',
+            'Vote_choiceA_XNDK5BBUOCENNRQ3FT4SQSCENFBNSY3BMOU3W2EZGNLH7ZD5ZSANKIRJZM': 1,
+            'Vote_choiceB_ELNJI3EFJYG5T7L3FXZEWAPUVUE24UUXKOUQALZQWXYUCWUM5J4DHLNU2A': 1,
+            'Vote_choiceA_ELNJI3EFJYG5T7L3FXZEWAPUVUE24UUXKOUQALZQWXYUCWUM5J4DHLNU2A': 1,
+            'Vote_choiceB_XNDK5BBUOCENNRQ3FT4SQSCENFBNSY3BMOU3W2EZGNLH7ZD5ZSANKIRJZM': 1,
+            'Vote_choiceB_CSNFGTZI47Q52ZUI6SHTTCYO2YX7VHWUSYRXJYSPIHXST5E5KLZQNNHVLY': 1,# Add user3 vote
+            'choiceA': 52500,
+            'choiceB': 122500,  # Update choiceB tally
+            'choiceA_child': 'child-oid_a1',
+            'choiceB_child': 'child-oid_b1'
+        }
+        self.assertDictEqual(intermediate_state_after_user3_vote, expected_intermediate_state_after_user3_vote)
+
+        # Creator votes on 'choiceB', but unable to update ref as User2 is the original voter.
         self.vote_app_creator.vote([b"vote", b"choiceB", b"child_oid_z1"])
         final_state = self.vote_app_creator.read_global_state()
 
         expected_final_state = {
             'Creator': 'VAX6M7SZY65NXSMAFRNUYHDAZK3326IUPZFKO63QZAAMIPVAK7ECTS2F4M',
             'TotalSupply': 1000000,
+            'Winner': 'choiceB',
             'OriginalVoter_choiceA': 'XNDK5BBUOCENNRQ3FT4SQSCENFBNSY3BMOU3W2EZGNLH7ZD5ZSANKIRJZM',
             'OriginalVoter_choiceB': 'ELNJI3EFJYG5T7L3FXZEWAPUVUE24UUXKOUQALZQWXYUCWUM5J4DHLNU2A',
             'Vote_choiceA_XNDK5BBUOCENNRQ3FT4SQSCENFBNSY3BMOU3W2EZGNLH7ZD5ZSANKIRJZM': 1,
@@ -131,11 +157,11 @@ class TestVoteApp(unittest.TestCase):
             'Vote_choiceA_ELNJI3EFJYG5T7L3FXZEWAPUVUE24UUXKOUQALZQWXYUCWUM5J4DHLNU2A': 1,
             'Vote_choiceB_VAX6M7SZY65NXSMAFRNUYHDAZK3326IUPZFKO63QZAAMIPVAK7ECTS2F4M': 1,
             'Vote_choiceB_XNDK5BBUOCENNRQ3FT4SQSCENFBNSY3BMOU3W2EZGNLH7ZD5ZSANKIRJZM': 1,
+            'Vote_choiceB_CSNFGTZI47Q52ZUI6SHTTCYO2YX7VHWUSYRXJYSPIHXST5E5KLZQNNHVLY': 1,# Add user3 vote
             'choiceA': 52500,
-            'choiceB': 930000,
-            'Winner': 'choiceB',
+            'choiceB': 1000000,  # Update choiceB tally
             'choiceA_child': 'child-oid_a1',
-            'choiceB_child': 'child_oid_z1'
+            'choiceB_child': 'child_oid_b1'
         }
 
         self.assertDictEqual(final_state, expected_final_state)
