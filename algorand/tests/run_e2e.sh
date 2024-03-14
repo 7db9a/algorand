@@ -15,3 +15,4 @@ python -m tests.e2e.test_winner_5
 python -m tests.e2e.test_winner_6
 python -m tests.e2e.test_winner_7
 python -m tests.e2e.test_winner_8
+python -m tests.e2e.test_winner_9
