@@ -161,7 +161,7 @@ class TestVoteApp(unittest.TestCase):
             'choiceA': 52500,
             'choiceB': 1000000,  # Update choiceB tally
             'choiceA_child': 'child-oid_a1',
-            'choiceB_child': 'child_oid_b1'
+            'choiceB_child': 'child-oid_b1'
         }
 
         self.assertDictEqual(final_state, expected_final_state)
