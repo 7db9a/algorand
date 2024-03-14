@@ -4,9 +4,6 @@ from algosdk.encoding import decode_address
 import unittest
 from lib.blockchain import Vote
 
-# Creator deletes Winner key.
-# Voter 2 increments choice after Voter 1 initiates.
-
 class TestVoteApp(unittest.TestCase):
     maxDiff = None
 
@@ -45,23 +42,15 @@ class TestVoteApp(unittest.TestCase):
     def test_vote_multiple_users(self):
         """
         Test to prove that a choice can be incremented by multiple voters.
-        This test involves three voting transactions by different users
-        and verifies the final state of the voting application.
+        This test involves three voting transactions by different users,
+        verifies the final state of the voting application, and tests
+        the deletion of keys associated with the winning choice.
         """
         self.vote_app_user1.vote([b"vote", b"choiceA", b"child-oid_a1"])
         self.vote_app_user2.vote([b"vote", b"choiceB", b"child-oid_b1"])
         self.vote_app_user2.vote([b"vote", b"choiceA", b"child-oid_b1"])
-        winner_state = self.vote_app_creator.vote([b"vote", b"choiceZ", b"child_oid_z1"])
-
-        choice = "choiceA"
-        sender = "XNDK5BBUOCENNRQ3FT4SQSCENFBNSY3BMOU3W2EZGNLH7ZD5ZSANKIRJZM"
-        self.vote_app_creator.delete_global_state_key_human(choice, sender)
-
-        choice = "choiceA"
-        sender = "ELNJI3EFJYG5T7L3FXZEWAPUVUE24UUXKOUQALZQWXYUCWUM5J4DHLNU2A"
-        self.vote_app_creator.delete_global_state_key_human(choice, sender)
-        
-        final_state = self.vote_app_creator.delete_key([b"delete_key", b"Winner"])
+        self.vote_app_creator.vote([b"vote", b"choiceZ", b"child_oid_z1"])
+        winner_state = self.vote_app_creator.read_global_state()
 
         expected_winner_state = {
             'Creator': 'VAX6M7SZY65NXSMAFRNUYHDAZK3326IUPZFKO63QZAAMIPVAK7ECTS2F4M',
@@ -82,25 +71,28 @@ class TestVoteApp(unittest.TestCase):
             'choiceZ_child': 'child_oid_z1'
         }
 
+        self.assertDictEqual(winner_state, expected_winner_state)
+
+        # Delete keys associated with the winning choice 'choiceZ'
+        self.vote_app_creator.delete_keys_associated_with_choice('choiceZ')
+
+        final_state = self.vote_app_creator.read_global_state()
+
         expected_final_state = {
             'Creator': 'VAX6M7SZY65NXSMAFRNUYHDAZK3326IUPZFKO63QZAAMIPVAK7ECTS2F4M',
             'TotalSupply': 1000000,
             'OriginalVoter_choiceA': 'XNDK5BBUOCENNRQ3FT4SQSCENFBNSY3BMOU3W2EZGNLH7ZD5ZSANKIRJZM',
             'OriginalVoter_choiceB': 'ELNJI3EFJYG5T7L3FXZEWAPUVUE24UUXKOUQALZQWXYUCWUM5J4DHLNU2A',
-            'OriginalVoter_choiceZ': 'VAX6M7SZY65NXSMAFRNUYHDAZK3326IUPZFKO63QZAAMIPVAK7ECTS2F4M',
+            'Vote_choiceA_XNDK5BBUOCENNRQ3FT4SQSCENFBNSY3BMOU3W2EZGNLH7ZD5ZSANKIRJZM': 1,
             'Vote_choiceB_ELNJI3EFJYG5T7L3FXZEWAPUVUE24UUXKOUQALZQWXYUCWUM5J4DHLNU2A': 1,
-            'Vote_choiceZ_VAX6M7SZY65NXSMAFRNUYHDAZK3326IUPZFKO63QZAAMIPVAK7ECTS2F4M': 1,
+            'Vote_choiceA_ELNJI3EFJYG5T7L3FXZEWAPUVUE24UUXKOUQALZQWXYUCWUM5J4DHLNU2A': 1,
             'choiceA': 52500,
             'choiceB': 2500,
-            'choiceZ': 877500,
             'choiceA_child': 'child-oid_a1',
-            'choiceB_child': 'child-oid_b1',
-            'choiceZ_child': 'child_oid_z1'
+            'choiceB_child': 'child-oid_b1'
         }
 
-        self.assertDictEqual(winner_state, expected_winner_state)
         self.assertDictEqual(final_state, expected_final_state)
 
 if __name__ == "__main__":
     unittest.main()
-

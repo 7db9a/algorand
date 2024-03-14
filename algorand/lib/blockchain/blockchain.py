@@ -76,6 +76,10 @@ class Vote:
     def optin(self):
         opt_in_app(self.client, self.user_private_key, self.app_id)
 
+    def read_global_state(self):
+
+        return read_global_state(self.client, self.app_id)
+
     def vote(self, app_args=None):
         sender = account.address_from_private_key(self.creator_private_key)
 
@@ -156,3 +160,34 @@ class Vote:
         global_state = read_global_state(self.client, self.app_id)
         return global_state
 
+    def delete_keys_associated_with_choice(self, choice):
+        global_state = read_global_state(self.client, self.app_id)
+
+        if "Winner" not in global_state:
+            raise ValueError("No 'Winner' key found in the global state.")
+
+        if global_state["Winner"] != choice:
+            raise ValueError(f"The specified choice '{choice}' is not the winner.")
+
+        keys_to_delete = []
+        vote_keys_to_delete = []
+
+        for key in global_state.keys():
+            if choice in key:
+                if key.startswith("Vote_"):
+                    vote_keys_to_delete.append(key)
+                else:
+                    keys_to_delete.append(key)
+
+        # Explicitly delete the "Winner" key if the specified choice matches the value of the "Winner" key
+        if global_state["Winner"] == choice:
+            keys_to_delete.append("Winner")
+
+        for key in keys_to_delete:
+            self.delete_key([b"delete_key", key.encode()])
+
+        for key in vote_keys_to_delete:
+            sender = key.split("_")[-1]
+            self.delete_global_state_key_human(choice, sender)
+
+        print(f"Deleted keys associated with choice '{choice}'.")
