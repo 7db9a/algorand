@@ -121,3 +121,5 @@ This guide provides an in-depth look at setting up and testing on Algorand's pri
 ## Note
 For more detailed instructions and command references, see the provided `intro.md` file and the project's commit logs.
 
+- You'll need to transfer microAlgos to accounts you create. I'd use the first one listed off of `Primary` to transfer from, and send 1mm microAlogos.
+
