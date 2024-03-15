@@ -11,7 +11,7 @@ def check_goal_cli_exists():
         return False
 
 def main():
-    print("Starting account info retrieval...")
+    print("Starting account balance retrieval...")
 
     # Check if the goal CLI is accessible in the system's PATH
     if not check_goal_cli_exists():
@@ -28,22 +28,17 @@ def main():
     datadir = "/algod/data/net1/Node"  # Replace with the actual data directory path
     print(f"Using data directory: {datadir}")
 
-    # Get account info by address
+    # Get account balance
     account_address = "YOUR_ACCOUNT_ADDRESS"  # Replace with the actual account address
     try:
-        print(f"Getting account info for '{account_address}'...")
-        account_info = wallet_utility.get_account_info_by_address(account_address, datadir)
-        print(f"Account info for '{account_address}':")
-        for key, value in account_info.items():
-            if value:
-                print(f"{key}: {value}")
-            else:
-                print(f"{key}: <none>")
+        print(f"Getting account balance for '{account_address}'...")
+        account_balance = wallet_utility.get_account_balance(account_address, datadir)
+        print(f"Account balance for '{account_address}': {account_balance}")
     except Exception as e:
-        print(f"Error getting account info: {str(e)}")
+        print(f"Error getting account balance: {str(e)}")
         return
 
-    print("Account info retrieval completed.")
+    print("Account balance retrieval completed.")
 
 if __name__ == "__main__":
     main()

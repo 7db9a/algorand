@@ -37,11 +37,13 @@ class WalletUtility:
                 # Iterate over the lines and find the account with the specified name
                 for line in lines:
                     if account_name in line:
-                        # Extract the account information using a regular expression
-                        match = re.search(r"\{[^}]+}", line)
+                        # Extract the account address using a regular expression
+                        match = re.search(r"\b[A-Z2-7]{58}\b", line)
                         if match:
-                            account_info = json.loads(match.group(0))
-                            print(f"Extracted account info: {account_info}")  # Debugging print statement
+                            account_address = match.group(0)
+                            print(f"Extracted account address: {account_address}")  # Debugging print statement
+                            # Get the account info by address
+                            account_info = self.get_account_info_by_address(account_address, datadir)
                             return account_info
                 raise Exception(f"Account with name '{account_name}' not found.")
             else:
