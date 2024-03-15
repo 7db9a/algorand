@@ -1,6 +1,7 @@
 import subprocess
 import json
 import re
+import tempfile
 
 class WalletUtility:
     def create_account(self, datadir):
@@ -94,3 +95,30 @@ class WalletUtility:
                 raise Exception(f"Error getting account balance: {result.stderr}")
         except Exception as e:
             raise Exception(f"Error getting account balance: {str(e)}")
+
+    def sign_transaction(self, unsigned_txn_file, account_address, datadir):
+        try:
+            # Create a temporary file to store the signed transaction
+            with tempfile.NamedTemporaryFile(mode='w+', delete=False) as signed_txn_file:
+                signed_txn_filename = signed_txn_file.name
+
+                # Sign the transaction using goal CLI
+                command = [
+                    "goal", "clerk", "sign",
+                    "-i", unsigned_txn_file,
+                    "-o", signed_txn_filename,
+                    "-a", account_address,
+                    "-d", datadir
+                ]
+                result = subprocess.run(command, capture_output=True, text=True)
+
+                if result.returncode == 0:
+                    print("Transaction signed successfully.")
+                    # Read the signed transaction from the file
+                    signed_txn_file.seek(0)
+                    signed_txn = signed_txn_file.read()
+                    return signed_txn
+                else:
+                    raise Exception(f"Error signing transaction: {result.stderr}")
+        except Exception as e:
+            raise Exception(f"Error signing transaction: {str(e)}")
