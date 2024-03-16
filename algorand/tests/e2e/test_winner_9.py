@@ -77,7 +77,8 @@ class TestVoteApp(unittest.TestCase):
 
         self.assertDictEqual(winner_state, expected_winner_state)
 
-        # Delete keys associated with the winning choice 'choiceZ'
+        # Delete keys associated with the winning choice 'choiceZ', except Winner and Exclusive
+        # keys, which are handled in contract vote logic.
         self.vote_app_creator.delete_keys_associated_with_choice('choiceZ')
 
         intermediate_state = self.vote_app_creator.read_global_state()
