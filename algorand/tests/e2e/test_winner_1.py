@@ -84,7 +84,7 @@ class TestVoteApp(unittest.TestCase):
             'choiceZ': 877500,
             'choiceA_child': 'child-oid_a1',
             'choiceB_child': 'child-oid_b1',
-            'choiceZ_child': 'child_oid_z1'
+            'choiceZ_child': 'child-oid_z1'
         }
 
         self.assertDictEqual(global_state, expected_state)
