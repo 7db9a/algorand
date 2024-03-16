@@ -45,15 +45,15 @@ def approval_program():
         If(balance.hasValue(),
             Seq([
                 # Check if a winner exists and the user is trying to vote on a different choice
-                (winner := App.globalGetEx(Int(0), Bytes("Winner"))),
-                If(winner.hasValue(),
-                    If(winner.value() != choice,
-                        Seq([
-                            App.globalPut(Bytes("LastWinner"), winner.value()),
-                            App.globalDel(Bytes("Winner"))
-                        ])
-                    )
-                ),
+                #(winner := App.globalGetEx(Int(0), Bytes("Winner"))),
+                #If(winner.hasValue(),
+                #    If(winner.value() != choice,
+                #        Seq([
+                #            App.globalPut(Bytes("LastWinner"), winner.value()),
+                #            App.globalDel(Bytes("Winner"))
+                #        ])
+                #    )
+                #),
                 # Record first (original) voter and track.
                 If(choice_existence == Int(0),
                     Seq([
@@ -85,6 +85,7 @@ def approval_program():
                                     is_milestone(choice_tally, 50),
                                     Seq([
                                         App.globalPut(Bytes("Winner"), choice),
+                                        App.globalPut(Bytes("WinnerRef"), App.globalGet(Concat(choice, Bytes("_child")))),
                                         # If a winner is declared, delete the "Exclusive" key
                                         App.globalDel(Bytes("Exclusive"))
                                     ]),
@@ -111,6 +112,7 @@ def approval_program():
                             is_milestone(choice_tally, 50),
                             Seq([
                                 App.globalPut(Bytes("Winner"), choice),
+                                App.globalPut(Bytes("WinnerRef"), App.globalGet(Concat(choice, Bytes("_child")))),
                                 # If a winner is declared, delete the "Exclusive" key if it exists
                                 If(exclusive_value.hasValue(),
                                     App.globalDel(Bytes("Exclusive"))
