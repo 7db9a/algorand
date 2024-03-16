@@ -48,12 +48,13 @@ class TestVoteApp(unittest.TestCase):
         self.vote_app_user1.vote([b"vote", b"choiceA", b"child-oid_a1"])
         self.vote_app_user2.vote([b"vote", b"choiceB", b"child-oid_b1"])
         self.vote_app_user2.vote([b"vote", b"choiceA", b"child-oid_b1"])
-        final_state = self.vote_app_creator.vote([b"vote", b"choiceZ", b"child_oid_z1"])
+        final_state = self.vote_app_creator.vote([b"vote", b"choiceZ", b"child-oid_z1"])
 
         expected_state = {
             'Creator': 'VAX6M7SZY65NXSMAFRNUYHDAZK3326IUPZFKO63QZAAMIPVAK7ECTS2F4M',
             'TotalSupply': 1000000,
             'Winner': 'choiceZ',
+            'WinnerRef': 'child-oid_z1',
             'OriginalVoter_choiceA': 'XNDK5BBUOCENNRQ3FT4SQSCENFBNSY3BMOU3W2EZGNLH7ZD5ZSANKIRJZM',
             'OriginalVoter_choiceB': 'ELNJI3EFJYG5T7L3FXZEWAPUVUE24UUXKOUQALZQWXYUCWUM5J4DHLNU2A',
             'OriginalVoter_choiceZ': 'VAX6M7SZY65NXSMAFRNUYHDAZK3326IUPZFKO63QZAAMIPVAK7ECTS2F4M',
@@ -66,7 +67,7 @@ class TestVoteApp(unittest.TestCase):
             'choiceZ': 877500,
             'choiceA_child': 'child-oid_a1',
             'choiceB_child': 'child-oid_b1',
-            'choiceZ_child': 'child_oid_z1'
+            'choiceZ_child': 'child-oid_z1'
         }
 
         self.assertDictEqual(final_state, expected_state)

@@ -80,6 +80,7 @@ class TestVoteApp(unittest.TestCase):
 
         expected_state = {
             'Winner': 'choiceA',
+            'WinnerRef': 'child-oid_a1',
             'Creator': 'VAX6M7SZY65NXSMAFRNUYHDAZK3326IUPZFKO63QZAAMIPVAK7ECTS2F4M',
             'TotalSupply': 1000000,
             'OriginalVoter_choiceA': 'XNDK5BBUOCENNRQ3FT4SQSCENFBNSY3BMOU3W2EZGNLH7ZD5ZSANKIRJZM',

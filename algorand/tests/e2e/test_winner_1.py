@@ -59,7 +59,7 @@ class TestVoteApp(unittest.TestCase):
 
         vote_app_user1.vote([b"vote", b"choiceA", b"child-oid_a1"])
         vote_app_user2.vote([b"vote", b"choiceB", b"child-oid_b1"])
-        final_state = self.vote_app_creator.vote([b"vote", b"choiceZ", b"child_oid_z1"])
+        final_state = self.vote_app_creator.vote([b"vote", b"choiceZ", b"child-oid_z1"])
 
         self.assert_final_state(final_state)
 
@@ -72,6 +72,7 @@ class TestVoteApp(unittest.TestCase):
             'Creator': 'VAX6M7SZY65NXSMAFRNUYHDAZK3326IUPZFKO63QZAAMIPVAK7ECTS2F4M',
             'TotalSupply': 1000000,
             'Winner': 'choiceZ',
+            'WinnerRef': 'child-oid_z1',
             'OriginalVoter_choiceA': 'XNDK5BBUOCENNRQ3FT4SQSCENFBNSY3BMOU3W2EZGNLH7ZD5ZSANKIRJZM',
             'OriginalVoter_choiceB': 'ELNJI3EFJYG5T7L3FXZEWAPUVUE24UUXKOUQALZQWXYUCWUM5J4DHLNU2A',
             'OriginalVoter_choiceZ': 'VAX6M7SZY65NXSMAFRNUYHDAZK3326IUPZFKO63QZAAMIPVAK7ECTS2F4M',
