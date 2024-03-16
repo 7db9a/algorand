@@ -174,7 +174,9 @@ class Vote:
 
         for key in global_state.keys():
             if choice in key:
-                if key.startswith("Vote_"):
+                if key.startswith("Exclusive_"):
+                    continue  # Skip keys starting with "Exclusive_"
+                elif key.startswith("Vote_"):
                     vote_keys_to_delete.append(key)
                 else:
                     keys_to_delete.append(key)
